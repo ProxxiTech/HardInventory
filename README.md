@@ -1,8 +1,11 @@
-# electron-boilerplate
+# Hard Inventory
 
-A minimalistic boilerplate for [Electron runtime](http://electron.atom.io). Tested on Windows, macOS and Linux.  
+Inventory management for hardware startups.
 
-This project contains only bare minimum of dependencies, to provide you with nice development environment. Doesn't impose on you any frontend technologies, so you can pick your favourite.
+* Scan barcodes from Digi-Key, Mouser, Arrow, etc into a Google Sheets document.
+* Manually enter other types of inventory.
+* Pull in electronic component information from OctoPart
+* Print out barcodes and human-readable text labels for organization
 
 # Quick start
 
