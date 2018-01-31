@@ -31,13 +31,14 @@
     "release": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder"
   },
   "dependencies": {
+    "bwip-js": "^1.6.2",
     "fs-jetpack": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.38",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.38",
     "@babel/preset-env": "^7.0.0-beta.38",
     "babel-loader": "^8.0.0-beta.0",
-    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.38",
     "chai": "^4.1.0",
     "css-loader": "^0.28.7",
     "electron": "1.7.11",
