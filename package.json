@@ -31,8 +31,11 @@
     "release": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder"
   },
   "dependencies": {
+    "async": "^2.6.0",
     "bwip-js": "^1.6.2",
-    "fs-jetpack": "^1.0.0"
+    "fs-jetpack": "^1.0.0",
+    "google-spreadsheet": "^2.0.4",
+    "octopartjs": "^1.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.38",
