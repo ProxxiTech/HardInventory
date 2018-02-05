@@ -4,9 +4,10 @@ const base = require("./webpack.base.config");
 
 module.exports = env => {
   return merge(base(env), {
+    context: path.resolve(__dirname, "../src"),
     entry: {
-      background: "./src/background.js",
-      app: "./src/app.js"
+      background: "./background.js",
+      app: "./app.js"
     },
     output: {
       filename: "[name].js",

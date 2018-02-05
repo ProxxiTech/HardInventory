@@ -8,10 +8,15 @@ body {
 
 body {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100%;
+  justify-content: flex-start;
+  align-items: stretch;
   font-family: sans-serif;
   color: #525252;
+
+  --accent-color-h: 290;
+  --accent-color-s: 40%;
+  --accent-color-l: 46%;
 }
 
 a {
@@ -19,6 +24,37 @@ a {
   color: #cb3837;
 }
 
+#sidebar {
+  margin-top: 1.33em;
+  margin-right: 5px;
+  justify-content: flex-start;
+}
+
+#sidebar .logo {
+  display: block;
+  align-self: center;
+  text-indent: -9999px;
+  width: 100px;
+  height: 100px;
+  background: url(../images/styles/hard-inventory-logo.svg);
+  background-size: 100px 100px;
+}
+
+#views {
+  width: 100%;
+  height: 100px;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+#views #loading {
+  align-items: center; 
+  justify-content: center;
+  width: 100%;
+  height: 100px;
+}
+
 .container {
-  text-align: center;
+  align-items: stretch;
+  justify-content: flex-start;
 }

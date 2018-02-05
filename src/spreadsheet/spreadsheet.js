@@ -1,7 +1,7 @@
 import { remote } from "electron";
 import jetpack from "fs-jetpack";
-let GoogleSpreadsheet = require('google-spreadsheet');
-let async = require('async');
+let GoogleSpreadsheet = require("google-spreadsheet");
+let async = require("async");
 
 function logAll(title, o) {
   console.log(title);
@@ -25,20 +25,19 @@ export let invHeaderIndexToName = [];
 export function initialize(doc_id, credentials, cb) {
   try {
     let doc = new GoogleSpreadsheet(doc_id);
-    var sheet;
 
     async.series(
       [
         function setAuth(step) {
-          console.log('Authenticating...');
+          console.log("Authenticating...");
 
           doc.useServiceAccountAuth(credentials, step);
         },
         function getInfoAndWorksheets(step) {
-          console.log('Loading document information...');
+          console.log("Loading document information...");
 
           doc.getInfo(function(err, info) {
-//             logAll(`Loaded ${info.title} by ${info.author.email}`, info);
+            //  logAll(`Loaded ${info.title} by ${info.author.email}`, info);
             /*
             {
                 "id": "https://spreadsheets.google.com/feeds/worksheets/177egcyC1eNPNm2Mot-E7kMe11MYMUfcBA5ohmbnMFhU/private/full",
@@ -72,12 +71,12 @@ export function initialize(doc_id, credentials, cb) {
             docInfo = info;
 
             for (let ws of info.worksheets) {
-//               logAll(`Worksheet ${ws.id} (${ws.title})`, ws);
+              // logAll(`Worksheet ${ws.id} (${ws.title})`, ws);
 
-              if (ws.title === 'Categories') {
+              if (ws.title === "Categories") {
                 catWorksheet = ws;
                 catMaxRow = ws.rowCount;
-              } else if (ws.title === 'Inventory') {
+              } else if (ws.title === "Inventory") {
                 invWorksheet = ws;
                 invMaxRow = ws.rowCount;
               }
@@ -87,12 +86,12 @@ export function initialize(doc_id, credentials, cb) {
           });
         },
         function getCategoryHeaders(step) {
-          console.log('Loading category headers...');
+          console.log("Loading category headers...");
 
           catWorksheet.getCells(
-            { 'min-row': 1, 'max-row': 1, 'min-col': 1, 'max-col': 26, 'return-empty': false },
+            { "min-row": 1, "max-row": 1, "min-col": 1, "max-col": 26, "return-empty": false },
             function(err, cells) {
-//               logAll('Category Headers', cells);
+              // logAll('Category Headers', cells);
               /*
               [
                   {
@@ -126,19 +125,19 @@ export function initialize(doc_id, credentials, cb) {
               }
 
               // Short names
-              catHeaderNameToIndex['cat'] = catHeaderNameToIndex['Category'];
-              catHeaderNameToIndex['desc'] = catHeaderNameToIndex['Description'];
+              catHeaderNameToIndex["cat"] = catHeaderNameToIndex["Category"];
+              catHeaderNameToIndex["desc"] = catHeaderNameToIndex["Description"];
 
               step();
             });
         },
         function getInventoryHeaders(step) {
-          console.log('Loading inventory headers...');
+          console.log("Loading inventory headers...");
 
           invWorksheet.getCells(
-            { 'min-row': 1, 'max-row': 1, 'min-col': 1, 'max-col': 26, 'return-empty': false },
+            { "min-row": 1, "max-row": 1, "min-col": 1, "max-col": 26, "return-empty": false },
             function(err, cells) {
-//               logAll('Inventory Headers', cells);
+              // logAll('Inventory Headers', cells);
               /*
               [
                 "value": "Location",
@@ -158,23 +157,23 @@ export function initialize(doc_id, credentials, cb) {
               }
 
               // Short names
-              invHeaderNameToIndex['loc'] = invHeaderNameToIndex['Location'];
-              invHeaderNameToIndex['pn'] = invHeaderNameToIndex['Part Number'];
-              invHeaderNameToIndex['mpn'] = invHeaderNameToIndex['Manufacturer Part Number'];
-              invHeaderNameToIndex['mfr'] = invHeaderNameToIndex['Manufacturer'];
-              invHeaderNameToIndex['qty'] = invHeaderNameToIndex['Quantity'];
-              invHeaderNameToIndex['desc'] = invHeaderNameToIndex['Description'];
+              invHeaderNameToIndex["loc"] = invHeaderNameToIndex["Location"];
+              invHeaderNameToIndex["pn"] = invHeaderNameToIndex["Part Number"];
+              invHeaderNameToIndex["mpn"] = invHeaderNameToIndex["Manufacturer Part Number"];
+              invHeaderNameToIndex["mfr"] = invHeaderNameToIndex["Manufacturer"];
+              invHeaderNameToIndex["qty"] = invHeaderNameToIndex["Quantity"];
+              invHeaderNameToIndex["desc"] = invHeaderNameToIndex["Description"];
 
               step();
             });
         },
         function getCategoryTable(step) {
-          console.log('Loading categories...');
+          console.log("Loading categories...");
 
           catWorksheet.getCells(
-            { 'min-row': 2, 'max-row': catMaxRow, 'min-col': 1, 'max-col': 26, 'return-empty': false },
+            { "min-row": 2, "max-row": catMaxRow, "min-col": 1, "max-col": 26, "return-empty": false },
             function(err, cells) {
-//               logAll('Category Rows', cells);
+              // logAll('Category Rows', cells);
               /*
               [
                   {
@@ -220,12 +219,12 @@ export function initialize(doc_id, credentials, cb) {
             });
         },
         function getInventoryTable(step) {
-          console.log('Loading inventory...');
+          console.log("Loading inventory...");
 
           invWorksheet.getCells(
-            { 'min-row': 2, 'max-row': invMaxRow, 'min-col': 1, 'max-col': 26, 'return-empty': false },
+            { "min-row": 2, "max-row": invMaxRow, "min-col": 1, "max-col": 26, "return-empty": false },
             function(err, cells) {
-//               logAll('Inventory Rows', cells);
+              // logAll('Inventory Rows', cells);
               /*
               [
                   {
@@ -260,7 +259,7 @@ export function initialize(doc_id, credentials, cb) {
             });
         },
         function finished(step) {
-          console.log('Ready.');
+          console.log("Ready.");
 
           cb();
 
@@ -268,15 +267,15 @@ export function initialize(doc_id, credentials, cb) {
         }
       ],
       function(err){
-          if( err ) {
-            console.log('Error: '+err);
-          }
+        if( err ) {
+          console.log("Error: "+err);
+        }
       }
     );
   }
   catch (err) {
-    console.log('ERROR: ' + err.message);
-    logAll('ERROR', err);
+    console.log("ERROR: " + err.message);
+    logAll("ERROR", err);
   }
 }
 
@@ -302,19 +301,19 @@ function findInventoryItemInternal(findColIdx, value, cb) {
 }
 
 export function findInventoryItemByMPN(mpn, cb) {
-  let mpnColIdx = invHeaderNameToIndex['mpn'];
+  let mpnColIdx = invHeaderNameToIndex["mpn"];
 
   findInventoryItemInternal(mpnColIdx, mpn, cb);
 }
 
 export function findInventoryItemByPN(pn, cb) {
-  let pnColIdx = invHeaderNameToIndex['pn'];
+  let pnColIdx = invHeaderNameToIndex["pn"];
 
   findInventoryItemInternal(pnColIdx, pn, cb);
 }
 
 export function findInventoryItemByLocation(loc, cb) {
-  let locColIdx = invHeaderNameToIndex['loc'];
+  let locColIdx = invHeaderNameToIndex["loc"];
 
   findInventoryItemInternal(locColIdx, loc, cb);
 }
@@ -322,7 +321,7 @@ export function findInventoryItemByLocation(loc, cb) {
 export function getInventoryItemDirect(rowIdx, cb) {
   let rowNum = rowIdx + 2;  // First row is the headers
   invWorksheet.getCells(
-    { 'min-row': rowNum, 'max-row': rowNum, 'min-col': 1, 'max-col': invNumCols, 'return-empty': true },
+    { "min-row": rowNum, "max-row": rowNum, "min-col": 1, "max-col": invNumCols, "return-empty": true },
     function(err, cells) {
       if (err) {
         return cb(err, null);
@@ -342,7 +341,7 @@ export function getInventoryItemDirect(rowIdx, cb) {
 
 export function getInventoryItem(rowIdx, cb) {
   if (rowIdx >= invTable.length) {
-    return cb(new Error('Row index out of range'), null);
+    return cb(new Error("Row index out of range"), null);
   }
 
   let row = invTable[rowIdx];
@@ -360,7 +359,7 @@ export function getInventoryItem(rowIdx, cb) {
 
 function setInventoryItemInternal(rowIdx, rowNum, item, cb) {
   invWorksheet.getCells(
-    { 'min-row': rowNum, 'max-row': rowNum, 'min-col': 1, 'max-col': invNumCols, 'return-empty': true },
+    { "min-row": rowNum, "max-row": rowNum, "min-col": 1, "max-col": invNumCols, "return-empty": true },
     function(err, cells) {
       if (err) {
         return cb(err, null);
@@ -396,7 +395,7 @@ export function setInventoryItem(rowIdx, item, cb) {
       setInventoryItemInternal(rowIdx, rowNum, item, cb);
     });
   } else {
-      setInventoryItemInternal(rowIdx, rowNum, item, cb);
+    setInventoryItemInternal(rowIdx, rowNum, item, cb);
   }
 }
 
@@ -407,11 +406,11 @@ export function addInventoryItem(item, cb) {
 }
 
 export function isInternalPartNumber(pn) {
-  let pnParts = pn.split('-');
+  let pnParts = pn.split("-");
   if (pnParts.length < 2)
     return false;
 
-  let catIdx = catHeaderNameToIndex['cat'];
+  let catIdx = catHeaderNameToIndex["cat"];
   for (let cat in catTable) {
     let catPrefix = cat[catIdx].value;
 

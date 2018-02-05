@@ -1,3 +1,15 @@
+// Typefaces required by Xel
+// require("typeface-roboto");
+// require("typeface-roboto-mono");
+// require("typeface-noto-sans");
+require("../node_modules/typeface-roboto");
+require("../node_modules/typeface-roboto-mono");
+require("../node_modules/typeface-noto-sans");
+// import "typeface-roboto";
+// import "typeface-roboto-mono/index.css";
+// require("typeface-noto-sans");
+// require("typeface-noto-sans/index.css");
+
 import "./stylesheets/main.css";
 
 // Small helpers you might want to keep
@@ -12,15 +24,15 @@ import { remote } from "electron";
 import jetpack from "fs-jetpack";
 import { greet } from "./hello_world/hello_world";
 import env from "env";
-let bwipjs = require('bwip-js');
-let async = require('async');
-const octopartjs = require('octopartjs');
-import * as spreadsheet from './spreadsheet/spreadsheet';
+
+let bwipjs = require("bwip-js");
+const octopartjs = require("octopartjs");
+import * as spreadsheet from "./spreadsheet/spreadsheet";
 
 //
 const app = remote.app;
 const appRootDir = jetpack.cwd(app.getAppPath());
-const appDir = jetpack.cwd(app.getAppPath() + '/app');
+const appDir = jetpack.cwd(app.getAppPath() + "/app");
 
 const config = appDir.read("config.json", "json");
 
@@ -35,13 +47,21 @@ const osMap = {
   linux: "Linux"
 };
 
-document.querySelector("#app").style.display = "block";
+document.querySelector("#loading").style.display = "flex";
+document.querySelector("#app").style.display = "none";
+
 document.querySelector("#greet").innerHTML = greet();
 document.querySelector("#os").innerHTML = osMap[process.platform];
 document.querySelector("#author").innerHTML = manifest.author;
 document.querySelector("#env").innerHTML = env.name;
 document.querySelector("#electron-version").innerHTML = process.versions.electron;
 
+let navButtons = document.querySelectorAll("#app-nav");
+for (let navButton of navButtons) {
+  navButton.addEventListener("click", function () {
+    console.log("Clicked: " + navButton.attributes["nav-target"].value);
+  });
+}
 
 function logAll(title, o) {
   console.log(title);
@@ -51,6 +71,9 @@ function logAll(title, o) {
 const creds = appDir.read("Inventory-System-Auth.json", "json");
 spreadsheet.initialize(config.spreadsheet_id, creds, () => {
   console.log(`Successfully loaded ${spreadsheet.docInfo.title}`);
+
+  document.querySelector("#app").style.display = "flex";
+  document.querySelector("#loading").style.display = "none";
 });
 
 function appendOutput(str) {
@@ -61,19 +84,19 @@ function appendOutput(str) {
 }
 
 function createBarcode(barcodeData) {
-  bwipjs.toBuffer({ bcid:'qrcode', height: 25, width: 25, text:barcodeData }, function (err, png) {
+  bwipjs.toBuffer({ bcid:"qrcode", height: 25, width: 25, text:barcodeData }, function (err, png) {
     if (err) {
-      document.getElementById('barcode-error').textContent = err;
+      document.getElementById("barcode-error").textContent = err;
     } else {
-      document.getElementById('barcode-img').src = 'data:image/png;base64,' + png.toString('base64');
+      document.getElementById("barcode-img").src = "data:image/png;base64," + png.toString("base64");
     }
   });
 }
 
 function isBarcodeDataMatrix(kbeData) {
   if (kbeData.length > 8) {
-    let h = kbeData[0].join('');
-    if (h == '[)>*F9*06') {
+    let h = kbeData[0].join("");
+    if (h == "[)>*F9*06") {
       return true;
     }
   }
@@ -99,12 +122,12 @@ function findOctopartDescription(item, source) {
 
 function octopartLookup(mpn, cb) {
   var queries = [
-    {'mpn': mpn, 'reference': 'line1'}
+    {"mpn": mpn, "reference": "line1"}
   ];
 
   var args = {
     queries: JSON.stringify(queries),
-    'include[]': 'descriptions'
+    "include[]": "descriptions"
   };
 
   octopartjs.parts.match(args, (err, body) => {
@@ -125,13 +148,13 @@ function octopartLookup(mpn, cb) {
 
         desc = findOctopartDescription(item, mfr);
         if (desc == null)
-          desc = findOctopartDescription(item, 'Digi-Key');
+          desc = findOctopartDescription(item, "Digi-Key");
         if (desc == null)
-          desc = findOctopartDescription(item, 'Arrow');
+          desc = findOctopartDescription(item, "Arrow");
         if (desc == null)
-          desc = findOctopartDescription(item, 'Mouser');
+          desc = findOctopartDescription(item, "Mouser");
         if (desc == null)
-          desc = findOctopartDescription(item, 'Avnet');
+          desc = findOctopartDescription(item, "Avnet");
         if (desc == null) {
           if (item.descriptions.length > 0)
             desc = item.descriptions[0].value;
@@ -145,25 +168,25 @@ function octopartLookup(mpn, cb) {
 
 function processBarcodeDataMatrix(kbeData) {
   // P<internalPartNumber>
-  let internalPartNumber = kbeData[1].join('');
+  let internalPartNumber = kbeData[1].join("");
   internalPartNumber = internalPartNumber.substring(internalPartNumber.indexOf("P") + 1);
-  appendOutput('PN: ' + internalPartNumber);
+  appendOutput("PN: " + internalPartNumber);
 
   // 1P<manufacturerPartNumber>
-  let manufacturerPartNumber = kbeData[2].join('');
+  let manufacturerPartNumber = kbeData[2].join("");
   manufacturerPartNumber = manufacturerPartNumber.substring(manufacturerPartNumber.indexOf("P") + 1);
-  appendOutput('MPN: ' + manufacturerPartNumber);
+  appendOutput("MPN: " + manufacturerPartNumber);
 
   // Q<quantity>
-  let quantity = kbeData[8].join('');
+  let quantity = kbeData[8].join("");
   quantity = parseInt(quantity.substring(quantity.indexOf("Q") + 1));
-  appendOutput('Q: ' + quantity);
+  appendOutput("Q: " + quantity);
 
-//   for (let i=3; i<kbeData.length; i++) {
-//     appendOutput(kbeData[i].join(''));
-//   }
+  //   for (let i=3; i<kbeData.length; i++) {
+  //     appendOutput(kbeData[i].join(''));
+  //   }
 
-  let barcodeData = internalPartNumber + '\u000D' + manufacturerPartNumber + '\u000D' + quantity;
+  let barcodeData = internalPartNumber + "\u000D" + manufacturerPartNumber + "\u000D" + quantity;
   createBarcode(barcodeData);
 
   spreadsheet.findInventoryItemByMPN(manufacturerPartNumber, (res) => {
@@ -176,25 +199,25 @@ function processBarcodeDataMatrix(kbeData) {
 
       // If item['Part Number'] is NOT an internal part number (e.g. a distributor PN),
       // and we have a real internal part number from this scan, update it.
-      if (!spreadsheet.isInternalPartNumber(item['Part Number']) && spreadsheet.isInternalPartNumber(internalPartNumber)) {
-           item['Part Number'] = internalPartNumber;
+      if (!spreadsheet.isInternalPartNumber(item["Part Number"]) && spreadsheet.isInternalPartNumber(internalPartNumber)) {
+        item["Part Number"] = internalPartNumber;
       }
 
       spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
-        logAll('Inventory item updated', rowIdx);
+        logAll("Inventory item updated", rowIdx);
       });
     } else {
       // Add
       let item = {
-        loc: `="A0"`,
+        loc: '="A0"',
         pn: `="${internalPartNumber}"`,
         mpn: `="${manufacturerPartNumber}"`,
-        mfr: `="Unknown"`,
+        mfr: '="Unknown"',
         qty: quantity,
-        desc: `=""`
+        desc: '=""'
       };
       spreadsheet.addInventoryItem(item, (err, rowIdx) => {
-        logAll('Inventory item added', rowIdx);
+        logAll("Inventory item added", rowIdx);
 
         // Lookup the MPN on Octopart
         octopartLookup(manufacturerPartNumber, (err, octopartMfr, octopartDesc) => {
@@ -210,7 +233,7 @@ function processBarcodeDataMatrix(kbeData) {
 
           if ((octopartMfr != null) || (octopartDesc != null)) {
             spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
-              logAll('Item updated with Octopart data', rowIdx);
+              logAll("Item updated with Octopart data", rowIdx);
             });
           }
         });
@@ -220,8 +243,8 @@ function processBarcodeDataMatrix(kbeData) {
 }
 
 function processBarcodeGeneric(kbeData) {
-  let data = kbeData[0].join('');
-  appendOutput('Barcode: ' + data);
+  let data = kbeData[0].join("");
+  appendOutput("Barcode: " + data);
 
   createBarcode(data);
 
@@ -234,19 +257,19 @@ function processBarcodeGeneric(kbeData) {
       item.Quantity = parseInt(item.Quantity) + 1;
 
       spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
-        logAll('Inventory item updated', rowIdx);
+        logAll("Inventory item updated", rowIdx);
       });
     } else {
       // Add
       spreadsheet.addInventoryItem({
-        loc: `="A0"`,
+        loc: '="A0"',
         pn: `="${data}"`,
         mpn: `="${data}"`,
-        mfr: `="Unknown"`,
+        mfr: '="Unknown"',
         qty: 1,
-        desc: `=""`
+        desc: '=""'
       }, (err, rowIdx) => {
-        logAll('Inventory item added', rowIdx);
+        logAll("Inventory item added", rowIdx);
       });
     }
   });
@@ -259,10 +282,10 @@ window.addEventListener("keydown", function(event) {
     return; // Do nothing if event already handled
   }
 
-  if (event.key == 'Clear') {
+  if (event.key == "Clear") {
     kbeData = [];
     kbeBlock = [];
-  } else if (event.key == 'Enter') {
+  } else if (event.key == "Enter") {
     if (kbeBlock.length > 0) {
       kbeData.push(kbeBlock);
     }
@@ -275,14 +298,14 @@ window.addEventListener("keydown", function(event) {
     }
     kbeData = [];
     kbeBlock = [];
-  } else if (event.key == 'Shift') {
+  } else if (event.key == "Shift") {
     // Ignored
   } else {
-    if (event.key == 'F8') {
+    if (event.key == "F8") {
       kbeData.push(kbeBlock);
       kbeBlock = [];
-    } else if (event.key == 'F9') {
-      kbeBlock.push('*' + event.key + '*');
+    } else if (event.key == "F9") {
+      kbeBlock.push("*" + event.key + "*");
     } else {
       kbeBlock.push(event.key);
     }

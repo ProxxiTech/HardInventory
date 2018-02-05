@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="node_modules/xel/stylesheets/vanilla.theme.css">
+  <script src="node_modules/xel/xel.min.js"></script>
+  <title>Hard Inventory</title>
+</head>
+<body>
+  <x-box style='align-items: stretch; justify-content: flex-start; width: 100%; height: 100%;'>
+    <x-box vertical id="sidebar">
+      <div class='logo'></div>
+      <x-buttons tracking='1'>
+        <x-box vertical>
+          <x-button skin="nav" id="app-nav" nav-target="scan-barcode" toggled>
+            <x-box>
+              <x-icon name='library-add'></x-icon>
+              <x-label>Scan Barcode</x-label>
+            </x-box>
+          </x-button>
+          <x-button skin="nav" id="app-nav" nav-target="inventory">
+            <x-box>
+              <x-icon name='library-books'></x-icon>
+              <x-label>Inventory</x-label>
+            </x-box>
+          </x-button>
+          <x-button skin="nav" id="app-nav" nav-target="categories">
+            <x-box>
+              <x-icon name='format-list-numbered'></x-icon>
+              <x-label>Categories</x-label>
+            </x-box>
+          </x-button>
+          <x-button skin="nav" id="app-nav" nav-target="settings">
+              <x-box>
+                <x-icon name='settings'></x-icon>
+                <x-label>Settings</x-label>
+              </x-box>
+            </x-button>
+          </x-box>
+      </x-buttons>
+    </x-box>
+    <x-box id="views" vertical>
+      <h1 id="heading">View Name</h1>
+      <div id="loading" style="display: flex;">
+        <x-throbber></x-throbber>
+      </div>
+      <x-box vertical id="app" class="container" style="display: none;">
+        <p id="greet"></p>
+        <p>
+          Welcome to <a href="http://electron.atom.io" class="js-external-link">Electron</a> app running on this <strong id="os"></strong> machine.
+        </p>
+        <p>
+          App author: <strong id="author"></strong>
+        </p>
+        <p>
+          Environment: <strong id="env"></strong>
+        </p>
+        <p>
+          Electron version: <strong id="electron-version"></strong>
+        </p>
+        <p>
+          Scanned: <pre><div id="kbe-data"></div></pre>
+        </p>
+        <p>
+          Barcode: <img id="barcode-img"><br/>
+          <div id="barcode-error"></div>
+        </p>
+      </x-box>
+    </x-box>
+  </x-box>
+
+  <script src="app/app.js"></script>
+</body>
+</html>
