@@ -30,40 +30,51 @@
               <x-label>Categories</x-label>
             </x-box>
           </x-button>
-          <x-button skin="nav" id="app-nav" nav-target="settings">
+          <x-button skin="nav" id="app-nav" nav-target="info">
               <x-box>
-                <x-icon name='settings'></x-icon>
-                <x-label>Settings</x-label>
+                <x-icon name='info-outline'></x-icon>
+                <x-label>Information</x-label>
               </x-box>
             </x-button>
           </x-box>
       </x-buttons>
     </x-box>
     <x-box id="views" vertical>
-      <h1 id="heading">View Name</h1>
+      <h1 id="heading">Hard Inventory</h1>
       <div id="loading" style="display: flex;">
         <x-throbber></x-throbber>
       </div>
-      <x-box vertical id="app" class="container" style="display: none;">
-        <p id="greet"></p>
-        <p>
-          Welcome to <a href="http://electron.atom.io" class="js-external-link">Electron</a> app running on this <strong id="os"></strong> machine.
-        </p>
-        <p>
-          App author: <strong id="author"></strong>
-        </p>
-        <p>
-          Environment: <strong id="env"></strong>
-        </p>
-        <p>
-          Electron version: <strong id="electron-version"></strong>
-        </p>
+      <x-box vertical id="scan-barcode-page" class="container" style="display: none;">
         <p>
           Scanned: <pre><div id="kbe-data"></div></pre>
         </p>
         <p>
           Barcode: <img id="barcode-img"><br/>
           <div id="barcode-error"></div>
+        </p>
+      </x-box>
+      <x-box vertical id="inventory-page" class="container" style="display: none;">
+        <p>
+          Inventory table goes here...
+        </p>
+      </x-box>
+      <x-box vertical id="categories-page" class="container" style="display: none;">
+        <p>
+          Categories table goes here...
+        </p>
+      </x-box>
+      <x-box vertical id="info-page" class="container" style="display: none;">
+        <p>
+          Version: <strong id="info-version"></strong>
+        </p>
+        <p>
+          Platform: <strong id="info-platform"></strong>
+        </p>
+        <p>
+          Environment: <strong id="info-env"></strong>
+        </p>
+        <p>
+          App author: <strong id="info-author"></strong>
         </p>
       </x-box>
     </x-box>

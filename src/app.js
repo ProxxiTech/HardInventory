@@ -22,7 +22,7 @@ import "./helpers/external_links.js";
 
 import { remote } from "electron";
 import jetpack from "fs-jetpack";
-import { greet } from "./hello_world/hello_world";
+// import { greet } from "./hello_world/hello_world";
 import env from "env";
 
 let bwipjs = require("bwip-js");
@@ -39,27 +39,158 @@ const config = appDir.read("config.json", "json");
 octopartjs.apikey(config.octopart_key);
 
 
-const manifest = appRootDir.read("package.json", "json");
-
-const osMap = {
-  win32: "Windows",
-  darwin: "macOS",
-  linux: "Linux"
-};
-
 document.querySelector("#loading").style.display = "flex";
-document.querySelector("#app").style.display = "none";
 
-document.querySelector("#greet").innerHTML = greet();
-document.querySelector("#os").innerHTML = osMap[process.platform];
-document.querySelector("#author").innerHTML = manifest.author;
-document.querySelector("#env").innerHTML = env.name;
-document.querySelector("#electron-version").innerHTML = process.versions.electron;
+class AppPage {
+  constructor(data) {
+    this.pageName = data.pageName;
+    this.state = data.state;
+  }
+
+  getPageDocElement() {
+    return document.querySelector(`#${this.pageName}-page`);
+  }
+
+  onInitialize() {
+    let el = this.getPageDocElement();
+    if (el != null) {
+      el.style.display = "none";
+    }
+  }
+
+  onEnter() {
+    let el = this.getPageDocElement();
+    if (el != null) {
+      el.style.display = "flex";
+    }
+  }
+
+  onExit() {
+    let el = this.getPageDocElement();
+    if (el != null) {
+      el.style.display = "none";
+    }
+  }
+}
+
+class ScanBarcodePage extends AppPage {
+  constructor(data) {
+    super(data);
+  }
+
+  onInitialize() { super.onInitialize(); }
+  onEnter() { super.onEnter(); }
+  onExit() { super.onExit(); }
+}
+
+class InventoryPage extends AppPage {
+  constructor(data) {
+    super(data);
+  }
+
+  onInitialize() { super.onInitialize(); }
+  onEnter() { super.onEnter(); }
+  onExit() { super.onExit(); }
+}
+
+class CategoriesPage extends AppPage {
+  constructor(data) {
+    super(data);
+  }
+
+  onInitialize() { super.onInitialize(); }
+  onEnter() { super.onEnter(); }
+  onExit() { super.onExit(); }
+}
+
+class InfoPage extends AppPage {
+  constructor(data) {
+    super(data);
+  }
+
+  onInitialize() {
+    super.onInitialize();
+
+    const manifest = appRootDir.read("package.json", "json");
+
+    const osMap = {
+      win32: "Windows",
+      darwin: "macOS",
+      linux: "Linux"
+    };
+
+    // document.querySelector("#greet").innerHTML = greet();
+    document.querySelector("#info-platform").innerHTML = osMap[process.platform];
+    document.querySelector("#info-author").innerHTML = manifest.author;
+    document.querySelector("#info-env").innerHTML = env.name;
+    document.querySelector("#info-version").innerHTML = manifest.version;
+  }
+
+  onEnter() { super.onEnter(); }
+  onExit() { super.onExit(); }
+}
+
+class AppState {
+  constructor(pages) {
+    this.pages = pages;
+    this.activePage = null;
+
+    let pageNameDict = {};
+    for (let page of pages) {
+      pageNameDict[page.pageName] = page;
+    }
+    this.pageNameDict = pageNameDict;
+
+    for (let page of this.pages) {
+      page.onInitialize();
+    }
+  }
+
+  onDataReady() {
+    document.querySelector("#loading").style.display = "none";
+
+    let firstPage = this.pages[0];
+    this.changePage(firstPage.pageName);
+  }
+
+  changePage(newPageName) {
+    if (this.activePage) {
+      if (this.activePage.pageName === newPageName) {
+        return;
+      }
+
+      this.activePage.onExit();
+    }
+
+    this.activePage = this.pageNameDict[newPageName];
+    this.activePage.onEnter();
+  }
+}
+
+let appState = new AppState([
+  new ScanBarcodePage({
+    pageName: "scan-barcode",
+    state: {}
+  }),
+  new InventoryPage({
+    pageName: "inventory",
+    state: {}
+  }),
+  new CategoriesPage({
+    pageName: "categories",
+    state: {}
+  }),
+  new InfoPage({
+    pageName: "info",
+    state: {}
+  }),
+]);
 
 let navButtons = document.querySelectorAll("#app-nav");
 for (let navButton of navButtons) {
   navButton.addEventListener("click", function () {
-    console.log("Clicked: " + navButton.attributes["nav-target"].value);
+    let pageName = navButton.attributes["nav-target"].value;
+    appState.changePage(pageName);
   });
 }
 
@@ -72,8 +203,7 @@ const creds = appDir.read("Inventory-System-Auth.json", "json");
 spreadsheet.initialize(config.spreadsheet_id, creds, () => {
   console.log(`Successfully loaded ${spreadsheet.docInfo.title}`);
 
-  document.querySelector("#app").style.display = "flex";
-  document.querySelector("#loading").style.display = "none";
+  appState.onDataReady();
 });
 
 function appendOutput(str) {
