@@ -106,6 +106,8 @@ class CategoriesPage extends AppPage {
 class InfoPage extends AppPage {
   constructor(data) {
     super(data);
+
+    this.spreadsheetURL = data.spreadsheetURL;
   }
 
   onInitialize() {
@@ -124,6 +126,8 @@ class InfoPage extends AppPage {
     document.querySelector("#info-author").innerHTML = manifest.author;
     document.querySelector("#info-env").innerHTML = env.name;
     document.querySelector("#info-version").innerHTML = manifest.version;
+
+    document.querySelector("#info-spreadsheet-link").setAttribute("href", this.spreadsheetURL);
   }
 
   onEnter() { super.onEnter(); }
@@ -182,6 +186,7 @@ let appState = new AppState([
   }),
   new InfoPage({
     pageName: "info",
+    spreadsheetURL: config.spreadsheet_url,
     state: {}
   }),
 ]);
