@@ -219,56 +219,130 @@ class ScanBarcodePage extends AppPage {
     this.isCapturingBarcode = false;
   }
 
-  onInitialize() {
-    super.onInitialize();
+  onKeyDown(event) {
+    if (event.preventDefaulted) {
+      return; // Do nothing if event already handled
+    }
+    if (!this.isActive) {
+      return;
+    }
 
-    window.addEventListener("keydown", function(event) {
-      if (event.preventDefaulted) {
-        return; // Do nothing if event already handled
-      }
-      if (!this.isActive) {
+    if (event.key == "Clear") {
+      this.kbeData = [];
+      this.kbeBlock = [];
+      this.isCapturingBarcode = true;
+
+      // Show spinner
+      this.displayLoadingScreen(true);
+    } else {
+      if (!this.isCapturingBarcode) {
         return;
       }
 
-      if (event.key == "Clear") {
+      if (event.key == "Enter") {
+        if (this.kbeBlock.length > 0) {
+          this.kbeData.push(this.kbeBlock);
+        }
+
+        if (isBarcodeDataMatrix(this.kbeData)) {
+          // Valid Data Matrix barcode
+          processBarcodeDataMatrix(this.kbeData);
+        } else {
+          processBarcodeGeneric(this.kbeData);
+        }
         this.kbeData = [];
         this.kbeBlock = [];
-        this.isCapturingBarcode = true;
+        this.isCapturingBarcode = false;
+
+        // Hide spinner
+        this.displayLoadingScreen(false);
+      } else if (event.key == "Shift") {
+        // Ignored
       } else {
-        if (!this.isCapturingBarcode) {
-          return;
-        }
-
-        if (event.key == "Enter") {
-          if (this.kbeBlock.length > 0) {
-            this.kbeData.push(this.kbeBlock);
-          }
-
-          if (isBarcodeDataMatrix(this.kbeData)) {
-            // Valid Data Matrix barcode
-            processBarcodeDataMatrix(this.kbeData);
-          } else {
-            processBarcodeGeneric(this.kbeData);
-          }
-          this.kbeData = [];
+        if (event.key == "F8") {
+          this.kbeData.push(this.kbeBlock);
           this.kbeBlock = [];
-          this.isCapturingBarcode = false;
-        } else if (event.key == "Shift") {
-          // Ignored
+        } else if (event.key == "F9") {
+          this.kbeBlock.push("*" + event.key + "*");
         } else {
-          if (event.key == "F8") {
-            this.kbeData.push(this.kbeBlock);
-            this.kbeBlock = [];
-          } else if (event.key == "F9") {
-            this.kbeBlock.push("*" + event.key + "*");
-          } else {
-            this.kbeBlock.push(event.key);
-          }
+          this.kbeBlock.push(event.key);
         }
       }
+    }
 
-      // Consume the event so it doesn't get handled twice
-      event.preventDefault();
+    // Consume the event so it doesn't get handled twice
+    event.preventDefault();
+  }
+
+  clearFormFields() {
+    this.Elements.locID.value = "";
+    this.Elements.pn.value = "";
+    this.Elements.mfr.value = "";
+    this.Elements.mpn.value = "";
+    this.Elements.desc.value = "";
+    this.Elements.qty.value = "";
+    this.Elements.addQty.toggled = true;
+    this.Elements.setQty.toggled = false;
+  }
+
+  onBtnClearClicked() {
+    this.clearFormFields();
+  }
+
+  onBtnAddClicked() {
+    // TODO: Retrieve form values
+
+    // TODO: Read barcode
+
+    // TODO: Create location/IPN barcode //
+
+    // this.clearFormFields();
+    this.hidePage();
+    this.Elements.results.style.display = "flex";
+  }
+
+  onBtnResultsBackClicked() {
+    this.Elements.results.style.display = "none";
+    this.showPage();
+  }
+
+  onInitialize() {
+    super.onInitialize();
+
+    this.Elements = {};
+    let elementNames = [
+      "locID",
+      "pn",
+      "mfr",
+      "mpn",
+      "desc",
+      "qty",
+      "addQty",
+      "setQty",
+      "btnClear",
+      "btnAdd",
+      "results",
+      "btnResultsBack"
+    ];
+    for (let name of elementNames) {
+      this.Elements[name] = document.querySelector(`#${this.pageName}-${name}`);
+    }
+
+    this.Elements.btnClear.addEventListener("click",  () => {
+      this.onBtnClearClicked();
+    });
+    this.Elements.btnAdd.addEventListener("click",  () => {
+      this.onBtnAddClicked();
+    });
+
+    this.Elements.results.style.display = "none";
+    this.Elements.btnResultsBack.addEventListener("click",  () => {
+      this.onBtnResultsBackClicked();
+    });
+      
+    //
+    window.addEventListener("keydown", (event) => {
+      this.onKeyDown(event);
     }, true);
   }
 

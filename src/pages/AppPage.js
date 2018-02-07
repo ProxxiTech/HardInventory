@@ -10,29 +10,44 @@ class AppPage {
     return document.querySelector(`#${this.pageName}-page`);
   }
 
-  onInitialize() {
-    let el = this.getPageDocElement();
-    if (el != null) {
-      el.style.display = "none";
-    }
-  }
-
-  onEnter() {
-    this.isActive = true;
-
+  showPage() {
     let el = this.getPageDocElement();
     if (el != null) {
       el.style.display = "flex";
     }
   }
 
-  onExit() {
-    this.isActive = false;
-
+  hidePage() {
     let el = this.getPageDocElement();
     if (el != null) {
       el.style.display = "none";
     }
+  }
+
+  displayLoadingScreen(isLoading) {
+    if (isLoading) {
+      this.hidePage();
+      document.querySelector("#loading").style.display = "block";
+    } else {
+      document.querySelector("#loading").style.display = "none";
+      this.showPage();
+    }
+  }
+
+  onInitialize() {
+    this.hidePage();
+  }
+
+  onEnter() {
+    this.isActive = true;
+
+    this.showPage();
+  }
+
+  onExit() {
+    this.isActive = false;
+
+    this.hidePage();
   }
 }
 

@@ -7,76 +7,135 @@
   <title>Hard Inventory</title>
 </head>
 <body>
-  <x-box style='align-items: stretch; justify-content: flex-start; width: 100%; height: 100%;'>
-    <x-box vertical id="sidebar">
-      <div class='logo'></div>
-      <x-buttons tracking='1'>
-        <x-box vertical>
-          <x-button skin="nav" id="app-nav" nav-target="scan-barcode" toggled>
-            <x-box>
-              <x-icon name='library-add'></x-icon>
-              <x-label>Scan Barcode</x-label>
-            </x-box>
-          </x-button>
-          <x-button skin="nav" id="app-nav" nav-target="inventory">
-            <x-box>
-              <x-icon name='library-books'></x-icon>
-              <x-label>Inventory</x-label>
-            </x-box>
-          </x-button>
-          <x-button skin="nav" id="app-nav" nav-target="categories">
-            <x-box>
-              <x-icon name='format-list-numbered'></x-icon>
-              <x-label>Categories</x-label>
-            </x-box>
-          </x-button>
-          <x-button skin="nav" id="app-nav" nav-target="info">
-              <x-box>
-                <x-icon name='info-outline'></x-icon>
-                <x-label>Information</x-label>
-              </x-box>
-            </x-button>
+  <x-box vertical id="sidebar">
+    <div class='logo'></div>
+    <x-buttons tracking='1'>
+      <x-box vertical>
+        <x-button skin="nav" id="app-nav" nav-target="scan-barcode" toggled>
+          <x-box>
+            <x-icon name='library-add'></x-icon>
+            <x-label>Scan Barcode</x-label>
           </x-box>
-      </x-buttons>
-    </x-box>
-    <x-box id="views" vertical>
-      <h1 id="heading">Hard Inventory</h1>
-      <div id="loading" style="display: flex;">
-        <x-throbber></x-throbber>
+        </x-button>
+        <x-button skin="nav" id="app-nav" nav-target="inventory">
+          <x-box>
+            <x-icon name='library-books'></x-icon>
+            <x-label>Inventory</x-label>
+          </x-box>
+        </x-button>
+        <x-button skin="nav" id="app-nav" nav-target="categories">
+          <x-box>
+            <x-icon name='format-list-numbered'></x-icon>
+            <x-label>Categories</x-label>
+          </x-box>
+        </x-button>
+        <x-button skin="nav" id="app-nav" nav-target="info">
+            <x-box>
+              <x-icon name='info-outline'></x-icon>
+              <x-label>Information</x-label>
+            </x-box>
+          </x-button>
+        </x-box>
+    </x-buttons>
+  </x-box>
+  <x-box id="views" vertical>
+    <h1 id="heading">Hard Inventory</h1>
+    <div id="loading">
+      <x-throbber></x-throbber>
+    </div>
+    <x-box vertical id="scan-barcode-page" class="container" style="display: none;">
+      <div class="formgrid fg2w">
+        <!-- Location ID -->
+        <x-label class="fgR1 fgC1">Location ID</x-label>
+        <x-input id="scan-barcode-locID" class="fgR1 fgC2" type='text' value='U1S3B5' style="justify-self: stretch; max-width: 100%;"></x-input>
+        <!-- Internal part number -->
+        <x-label class="fgR1 fgC3">Internal P/N</x-label>
+        <x-input id="scan-barcode-pn" class="fgR1 fgC4" type='text' value='14-00025' style="justify-self: stretch; max-width: 100%;"></x-input>
+        <!-- Manufacturer -->
+        <x-label class="fgR2 fgC1">Manufacturer</x-label>
+        <x-input id="scan-barcode-mfr" class="fgR2 fgC2" type='text' value='Texas Instruments' style="justify-self: stretch; max-width: 100%;"></x-input>
+        <!-- Manufacturer part number -->
+        <x-label class="fgR2 fgC3">Manufacturer P/N</x-label>
+        <x-input id="scan-barcode-mpn" class="fgR2 fgC4" type='text' value='GRM1K0201R200K05-TR' style="justify-self: stretch; max-width: 100%;"></x-input>
+        <!-- Description -->
+        <x-label class="fgR3 fgC1">Description</x-label>
+        <x-input id="scan-barcode-desc" class="fgR3 fgC24" type="text" value="200k OHM 0.5% 0201 RESISTOR" style="justify-self: stretch; max-width: 100%;"></x-input>
+        <!-- Quantity -->
+        <x-label class="fgR4 fgC1">Quantity</x-label>
+        <x-input id="scan-barcode-qty" class="fgR4 fgC2" type='text' value='5000' style="justify-self: stretch; max-width: 100%;"></x-input>
+        <!-- Set/Add quantity -->
+        <x-radios vertical class="fgR45 fgC34" style="align-self: flex-start;">
+          <x-box>
+            <x-radio id="scan-barcode-addQty" type='spin' toggled></x-radio>
+            <x-label for="scan-barcode-addQty" id='label-1'>Add to Quantity</x-label>
+          </x-box>
+          <x-box>
+            <x-radio id="scan-barcode-setQty" type='spin'></x-radio>
+            <x-label for="scan-barcode-setQty" id='label-1'>Set Quantity</x-label>
+          </x-box>
+        </x-radios>
       </div>
-      <x-box vertical id="scan-barcode-page" class="container" style="display: none;">
-        <p>
-          Scanned: <pre><div id="kbe-data"></div></pre>
-        </p>
-        <p>
-          Barcode: <img id="barcode-img"><br/>
-          <div id="barcode-error"></div>
-        </p>
-      </x-box>
-      <x-box vertical id="inventory-page" class="container" style="display: none;">
-        <p>
-          Inventory table goes here...
-        </p>
-      </x-box>
-      <x-box vertical id="categories-page" class="container" style="display: none;">
-        <p>
-          Categories table goes here...
-        </p>
-      </x-box>
-      <x-box vertical id="info-page" class="container" style="display: none;">
-        <p>
-            <a href="" class="js-external-link" id="info-spreadsheet-link">Open Spreadsheet</a>
-        </p>
-        <p>
-          Version: <strong id="info-version"></strong> / <strong id="info-platform"></strong>
-        </p>
-        <p>
-          Environment: <strong id="info-env"></strong>
-        </p>
-        <p>
-          App author: <strong id="info-author"></strong>
-        </p>
-      </x-box>
+      <div class="formgrid fg1w">
+        <!-- Buttons -->
+        <x-box class="fgR1 fgC2" style="justify-self: flex-end;">
+          <!-- Clear -->
+          <x-button id="scan-barcode-btnClear" skin="textured-condensed">
+            <x-label>Clear</x-label>
+          </x-button>
+          <!-- Add -->
+          <x-button id="scan-barcode-btnAdd" skin="textured" style="margin-left: 20px;">
+            <x-box>
+              <x-label>Add</x-label>
+              <x-icon name='chevron-right'></x-icon>
+            </x-box>
+          </x-button>
+        </x-box>
+      </div>
+    </x-box>
+    <x-box vertical id="scan-barcode-results" style="display: none;">
+      <p>
+        Scanned: <pre><div id="kbe-data"></div></pre>
+      </p>
+      <p>
+        Barcode: <img id="barcode-img"><br/>
+        <div id="barcode-error"></div>
+      </p>
+      <div class="formgrid fg1w">
+        <!-- Buttons -->
+        <x-box class="fgR1 fgC2" style="justify-self: flex-end;">
+          <!-- Back button -->
+          <x-button id="scan-barcode-btnResultsBack" skin="textured" style="margin-left: 20px;">
+            <x-box>
+              <x-icon name='chevron-left'></x-icon>
+              <x-label>Back</x-label>
+            </x-box>
+          </x-button>
+        </x-box>
+      </div>
+    </x-box>
+    <x-box vertical id="inventory-page" class="container" style="display: none;">
+      <p>
+        Inventory table goes here...
+      </p>
+    </x-box>
+    <x-box vertical id="categories-page" class="container" style="display: none;">
+      <p>
+        Categories table goes here...
+      </p>
+    </x-box>
+    <x-box vertical id="info-page" class="container" style="display: none;">
+      <p>
+          <a href="" class="js-external-link" id="info-spreadsheet-link">Open Spreadsheet</a>
+      </p>
+      <p>
+        Version: <strong id="info-version"></strong> / <strong id="info-platform"></strong>
+      </p>
+      <p>
+        Environment: <strong id="info-env"></strong>
+      </p>
+      <p>
+        App author: <strong id="info-author"></strong>
+      </p>
     </x-box>
   </x-box>
 
