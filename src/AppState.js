@@ -15,6 +15,10 @@ class AppState {
   }
 
   onDataReady() {
+    for (let page of this.pages) {
+      page.onDataReady();
+    }
+
     document.querySelector("#loading").style.display = "none";
 
     let firstPage = this.pages[0];

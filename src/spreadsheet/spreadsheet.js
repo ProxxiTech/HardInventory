@@ -284,7 +284,7 @@ function findInventoryItemInternal(findColIdx, value, cb) {
     let row = invTable[rowIdx];
     let itemValue = row[findColIdx].value;
 
-    if (itemValue === value) {
+    if (itemValue.toLowerCase() === value.toLowerCase()) {
       let item = {};
       for (let cell of row) {
         let colIdx = cell.col - 1;
@@ -300,6 +300,29 @@ function findInventoryItemInternal(findColIdx, value, cb) {
   cb(null);
 }
 
+function findInventoryItemsInternal(findColIdx, value, cb) {
+  let results = [];
+
+  for (let rowIdx=0; rowIdx<invTable.length; rowIdx++) {
+    let row = invTable[rowIdx];
+    let itemValue = row[findColIdx].value;
+
+    if (itemValue.toLowerCase() === value.toLowerCase()) {
+      let item = {};
+      for (let cell of row) {
+        let colIdx = cell.col - 1;
+        let colName = invHeaderIndexToName[colIdx];
+
+        item[colName] = cell.value;
+      }
+
+      results.push({ rowIdx, item });
+    }
+  }
+
+  cb((results.length > 0) ? results : null);
+}
+
 export function findInventoryItemByMPN(mpn, cb) {
   let mpnColIdx = invHeaderNameToIndex["mpn"];
 
@@ -312,10 +335,10 @@ export function findInventoryItemByPN(pn, cb) {
   findInventoryItemInternal(pnColIdx, pn, cb);
 }
 
-export function findInventoryItemByLocation(loc, cb) {
+export function findInventoryItemsByLocation(loc, cb) {
   let locColIdx = invHeaderNameToIndex["loc"];
 
-  findInventoryItemInternal(locColIdx, loc, cb);
+  findInventoryItemsInternal(locColIdx, loc, cb);
 }
 
 export function getInventoryItemDirect(rowIdx, cb) {
@@ -339,9 +362,13 @@ export function getInventoryItemDirect(rowIdx, cb) {
     });
 }
 
-export function getInventoryItem(rowIdx, cb) {
+export function getInventoryItemCount() {
+  return invTable.length;
+}
+
+export function getInventoryItem(rowIdx) {
   if (rowIdx >= invTable.length) {
-    return cb(new Error("Row index out of range"), null);
+    return null;
   }
 
   let row = invTable[rowIdx];
@@ -354,7 +381,29 @@ export function getInventoryItem(rowIdx, cb) {
     item[colName] = cell.value;
   }
 
-  cb(null, item);
+  return item;
+}
+
+export function getCategoryItemCount() {
+  return catTable.length;
+}
+
+export function getCategoryItem(rowIdx) {
+  if (rowIdx >= catTable.length) {
+    return null;
+  }
+
+  let row = catTable[rowIdx];
+
+  let item = {};
+  for (let cell of row) {
+    let colIdx = cell.col - 1;
+    let colName = catHeaderIndexToName[colIdx];
+
+    item[colName] = cell.value;
+  }
+
+  return item;
 }
 
 function setInventoryItemInternal(rowIdx, rowNum, item, cb) {

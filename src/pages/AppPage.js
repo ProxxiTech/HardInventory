@@ -27,7 +27,7 @@ class AppPage {
   displayLoadingScreen(isLoading) {
     if (isLoading) {
       this.hidePage();
-      document.querySelector("#loading").style.display = "block";
+      document.querySelector("#loading").style.display = "flex";
     } else {
       document.querySelector("#loading").style.display = "none";
       this.showPage();
@@ -36,6 +36,10 @@ class AppPage {
 
   onInitialize() {
     this.hidePage();
+  }
+
+  onDataReady() {
+    // Spreadsheet data has been loaded
   }
 
   onEnter() {

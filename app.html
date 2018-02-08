@@ -11,10 +11,16 @@
     <div class='logo'></div>
     <x-buttons tracking='1'>
       <x-box vertical>
-        <x-button skin="nav" id="app-nav" nav-target="scan-barcode" toggled>
+        <x-button skin="nav" id="app-nav" nav-target="lookup" toggled>
+          <x-box>
+            <x-icon name='search'></x-icon>
+            <x-label>Lookup</x-label>
+          </x-box>
+        </x-button>
+        <x-button skin="nav" id="app-nav" nav-target="scan-barcode">
           <x-box>
             <x-icon name='library-add'></x-icon>
-            <x-label>Scan Barcode</x-label>
+            <x-label>Add/Scan Items</x-label>
           </x-box>
         </x-button>
         <x-button skin="nav" id="app-nav" nav-target="inventory">
@@ -43,6 +49,58 @@
     <div id="loading">
       <x-throbber></x-throbber>
     </div>
+    <x-box vertical id="lookup-page" class="container" style="display: none;">
+      <div class="formgrid fg2w">
+        <!-- Location ID -->
+        <x-label class="fgR1 fgC1">Location ID</x-label>
+        <x-input id="lookup-locID" class="fgR1 fgC2" type='text' value='' style="justify-self: stretch; max-width: 100%;"></x-input>
+        <!-- Internal part number -->
+        <x-label class="fgR1 fgC3">Internal P/N</x-label>
+        <x-input id="lookup-pn" class="fgR1 fgC4" type='text' value='14-0025' style="justify-self: stretch; max-width: 100%;"></x-input>
+      </div>
+      <div class="formgrid fg1w">
+        <!-- Buttons -->
+        <x-box class="fgR2 fgC2" style="justify-self: flex-end;">
+          <!-- Clear -->
+          <x-button id="lookup-btnClear" skin="textured-condensed">
+            <x-label>Clear</x-label>
+          </x-button>
+          <!-- Add -->
+          <x-button id="lookup-btnLookup" skin="textured" style="margin-left: 20px;">
+            <x-box>
+              <x-label>Lookup</x-label>
+              <x-icon name='chevron-right'></x-icon>
+            </x-box>
+          </x-button>
+        </x-box>
+      </div>
+    </x-box>
+    <x-box vertical id="lookup-results" class="container" style="display: none;">
+      <p>
+        <div id="lookup-lookupResult"></div>
+      </p>
+      <div class="formgrid fg1w">
+        <!-- Buttons -->
+        <x-box class="fgR1 fgC1" style="justify-self: flex-start;">
+          <!-- Print button -->
+          <x-button id="lookup-btnResultsPrint" skin="textured" style="margin-left: 20px;">
+            <x-box>
+              <x-icon name='print'></x-icon>
+              <x-label>Print Barcode</x-label>
+            </x-box>
+          </x-button>
+        </x-box>
+        <x-box class="fgR1 fgC2" style="justify-self: flex-end;">
+          <!-- Back button -->
+          <x-button id="lookup-btnResultsBack" skin="textured" style="margin-left: 20px;">
+            <x-box>
+              <x-icon name='chevron-left'></x-icon>
+              <x-label>Back</x-label>
+            </x-box>
+          </x-button>
+        </x-box>
+      </div>
+    </x-box>
     <x-box vertical id="scan-barcode-page" class="container" style="display: none;">
       <div class="formgrid fg2w">
         <!-- Location ID -->
@@ -50,7 +108,14 @@
         <x-input id="scan-barcode-locID" class="fgR1 fgC2" type='text' value='U1S3B5' style="justify-self: stretch; max-width: 100%;"></x-input>
         <!-- Internal part number -->
         <x-label class="fgR1 fgC3">Internal P/N</x-label>
-        <x-input id="scan-barcode-pn" class="fgR1 fgC4" type='text' value='14-00025' style="justify-self: stretch; max-width: 100%;"></x-input>
+        <x-box class="fgR1 fgC4" style="justify-self: stretch; max-width: 100%;">
+          <x-select id="scan-barcode-category" style="max-width: 85px;">
+            <x-menu id="scan-barcode-categoryMenu">
+            </x-menu>
+          </x-select>
+          &nbsp;-&nbsp;
+          <x-input id="scan-barcode-pn" type='text' value='00025' style="justify-self: stretch; max-width: 100%;"></x-input>
+        </x-box>
         <!-- Manufacturer -->
         <x-label class="fgR2 fgC1">Manufacturer</x-label>
         <x-input id="scan-barcode-mfr" class="fgR2 fgC2" type='text' value='Texas Instruments' style="justify-self: stretch; max-width: 100%;"></x-input>
@@ -92,13 +157,13 @@
         </x-box>
       </div>
     </x-box>
-    <x-box vertical id="scan-barcode-results" style="display: none;">
+    <x-box vertical id="scan-barcode-results" class="container" style="display: none;">
       <p>
-        Scanned: <pre><div id="kbe-data"></div></pre>
+        Scanned: <pre><div id="scan-barcode-barcodeData"></div></pre>
       </p>
       <p>
-        Barcode: <img id="barcode-img"><br/>
-        <div id="barcode-error"></div>
+        Barcode: <img id="scan-barcode-barcodeResult"><br/>
+        <div id="scan-barcode-barcodeError"></div>
       </p>
       <div class="formgrid fg1w">
         <!-- Buttons -->

@@ -5,7 +5,7 @@
 
 import path from "path";
 import url from "url";
-import { app, Menu } from "electron";
+import { app, Menu/*, ipcMain, webContents*/ } from "electron";
 import { devMenuTemplate } from "./menu/dev_menu_template";
 import { editMenuTemplate } from "./menu/edit_menu_template";
 import createWindow from "./helpers/window";
@@ -35,7 +35,15 @@ app.on("ready", () => {
 
   const mainWindow = createWindow("main", {
     width: 1000,
-    height: 600
+    height: 600,
+    show: false
+  });
+  mainWindow.once("ready-to-show", () => {
+    mainWindow.show();
+
+    if (env.name === "development") {
+      mainWindow.openDevTools();
+    }
   });
 
   mainWindow.loadURL(
@@ -45,12 +53,17 @@ app.on("ready", () => {
       slashes: true
     })
   );
-
-  if (env.name === "development") {
-    mainWindow.openDevTools();
-  }
 });
 
 app.on("window-all-closed", () => {
   app.quit();
 });
+
+// ipcMain.on("setBarcodeData", function(event, data) {
+//   let webContentsID = data.webContentsID;
+//   let target = webContents.fromId(webContentsID);
+
+//   if (target != null) {
+//     target.send("setBarcodeData", data);
+//   }
+// });

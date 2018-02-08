@@ -7,7 +7,8 @@ module.exports = env => {
     context: path.resolve(__dirname, "../src"),
     entry: {
       background: "./background.js",
-      app: "./app.js"
+      app: "./app.js",
+      print_barcode: "./print_barcode.js"
     },
     output: {
       filename: "[name].js",

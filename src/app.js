@@ -16,14 +16,11 @@ import "./stylesheets/main.css";
 import "./helpers/context_menu.js";
 import "./helpers/external_links.js";
 
-// ----------------------------------------------------------------------------
-// Everything below is just to show you how it works. You can delete all of it.
-// ----------------------------------------------------------------------------
-
 import { remote } from "electron";
 import jetpack from "fs-jetpack";
 
 const octopartjs = require("octopartjs");
+
 import * as spreadsheet from "./spreadsheet/spreadsheet";
 
 //
@@ -34,9 +31,9 @@ const config = appDir.read("config.json", "json");
 
 octopartjs.apikey(config.octopart_key);
 
-
 document.querySelector("#loading").style.display = "flex";
 
+import LookupPage from "./pages/LookupPage";
 import ScanBarcodePage from "./pages/ScanBarcodePage";
 import InventoryPage from "./pages/InventoryPage";
 import CategoriesPage from "./pages/CategoriesPage";
@@ -45,6 +42,10 @@ import InfoPage from "./pages/InfoPage";
 import AppState from "./AppState";
 
 let appState = new AppState([
+  new LookupPage({
+    pageName: "lookup",
+    state: {}
+  }),
   new ScanBarcodePage({
     pageName: "scan-barcode",
     state: {}
