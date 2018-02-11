@@ -50,56 +50,73 @@
       <x-throbber></x-throbber>
     </div>
     <x-box vertical id="lookup-page" class="container" style="display: none;">
-      <div class="formgrid fg2w">
-        <!-- Location ID -->
-        <x-label class="fgR1 fgC1">Location ID</x-label>
-        <x-input id="lookup-locID" class="fgR1 fgC2" type='text' value='' style="justify-self: stretch; max-width: 100%;"></x-input>
-        <!-- Internal part number -->
-        <x-label class="fgR1 fgC3">Internal P/N</x-label>
-        <x-input id="lookup-pn" class="fgR1 fgC4" type='text' value='14-0025' style="justify-self: stretch; max-width: 100%;"></x-input>
-      </div>
-      <div class="formgrid fg1w">
-        <!-- Buttons -->
-        <x-box class="fgR2 fgC2" style="justify-self: flex-end;">
-          <!-- Clear -->
-          <x-button id="lookup-btnClear" skin="textured-condensed">
-            <x-label>Clear</x-label>
-          </x-button>
-          <!-- Add -->
-          <x-button id="lookup-btnLookup" skin="textured" style="margin-left: 20px;">
-            <x-box>
-              <x-label>Lookup</x-label>
-              <x-icon name='chevron-right'></x-icon>
-            </x-box>
-          </x-button>
-        </x-box>
-      </div>
+      <x-box vertical style="max-width: 550px;">
+        <div class="formgrid fg1w-wide">
+          <x-select id="lookup-type" class="fgR1 fgC1">
+            <x-menu id="lookup-typeMenu">
+              <x-menuitem id="lookup-typeLocID" value='locid' toggled>
+                <x-label>Location ID</x-label>
+              </x-menuitem>
+              <x-menuitem id="lookup-typePN" value='pn'>
+                <x-label>Internal P/N</x-label>
+              </x-menuitem>
+            </x-menu>
+          </x-select>
+          <x-input id="lookup-value" class="fgR1 fgC2" type='text' value='' style="justify-self: stretch; max-width: 100%;"></x-input>
+        </div>
+        <div class="formgrid fg1w">
+          <!-- Buttons -->
+          <x-box class="fgR1 fgC2" style="justify-self: flex-end;">
+            <!-- Clear -->
+            <x-button id="lookup-btnClear" skin="textured-condensed">
+              <x-label>Clear</x-label>
+            </x-button>
+            <!-- Add -->
+            <x-button id="lookup-btnLookup" skin="textured" style="margin-left: 20px;">
+              <x-box>
+                <x-label>Lookup</x-label>
+                <x-icon name='chevron-right'></x-icon>
+              </x-box>
+            </x-button>
+          </x-box>
+        </div>
+      </x-box>
     </x-box>
     <x-box vertical id="lookup-results" class="container" style="display: none;">
-      <p>
-        <div id="lookup-lookupResult"></div>
-      </p>
-      <div class="formgrid fg1w">
-        <!-- Buttons -->
-        <x-box class="fgR1 fgC1" style="justify-self: flex-start;">
-          <!-- Print button -->
-          <x-button id="lookup-btnResultsPrint" skin="textured" style="margin-left: 20px;">
+      <x-card style="margin-top: 0px;">
+        <header>
+          <strong id="lookup-resultsHeaderLocID" style="font-size: larger;"></strong>
+          <x-button id="lookup-btnResultsPrintLocID" skin="textured" style="float: right;">
             <x-box>
               <x-icon name='print'></x-icon>
               <x-label>Print Barcode</x-label>
             </x-box>
           </x-button>
+        </header>
+        <main id="lookup-lookupResultsLocID">
+        </main>
+      </x-card>
+      <x-box vertical id="lookup-resultsListPN">
+        <x-card id="lookup-resultsPN" style="display: none; margin-top: 0px;">
+          <header>
+            <strong id="lookup-resultsHeaderPN" style="font-size: larger;"></strong>
+            <x-button id="lookup-btnResultsPrintPN" skin="textured" style="float: right;">
+              <x-box>
+                <x-icon name='print'></x-icon>
+                <x-label>Print Barcode</x-label>
+              </x-box>
+            </x-button>
+          </header>
+          <main id="lookup-lookupResultsPN">
+          </main>
+        </x-card>
+      </x-box>
+      <x-button id="lookup-btnResultsBack" skin="textured">
+        <x-box>
+          <x-icon name='chevron-left'></x-icon>
+          <x-label>Back</x-label>
         </x-box>
-        <x-box class="fgR1 fgC2" style="justify-self: flex-end;">
-          <!-- Back button -->
-          <x-button id="lookup-btnResultsBack" skin="textured" style="margin-left: 20px;">
-            <x-box>
-              <x-icon name='chevron-left'></x-icon>
-              <x-label>Back</x-label>
-            </x-box>
-          </x-button>
-        </x-box>
-      </div>
+      </x-button>
     </x-box>
     <x-box vertical id="scan-barcode-page" class="container" style="display: none;">
       <div class="formgrid fg2w">

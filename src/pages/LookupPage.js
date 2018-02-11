@@ -40,12 +40,18 @@ class LookupPage extends AppPage {
     if (data.startsWith(prefixLocID)) {
       let locID = data.substring(prefixLocID.length);
       if (locID.length > 0) {
-        this.Elements.locID.value = locID;
+        this.Elements.type.value = this.Elements.typeLocID.value;
+        this.Elements.type._updateButton();
+
+        this.Elements.value.value = locID;
       }
     } else if (data.startsWith(prefixPN)) {
       let pn = data.substring(prefixPN.length);
       if (pn.length > 0) {
-        this.Elements.pn.value = pn;
+        this.Elements.type.value = this.Elements.typePN.value;
+        this.Elements.type._updateButton();
+
+        this.Elements.value.value = pn;
       }
     }
   }
@@ -103,77 +109,143 @@ class LookupPage extends AppPage {
   }
 
   clearFormFields() {
-    this.Elements.locID.value = "";
-    this.Elements.pn.value = "";
+    this.Elements.type.value = this.Elements.typeLocID.value;
+    this.Elements.type._updateButton();
+
+    this.Elements.value.value = "";
   }
 
   onBtnClearClicked() {
     this.clearFormFields();
   }
 
-  appendOutput(str) {
-    let el = document.createElement("span");
-    el.innerHTML = str + "<br/>";
+  setOutputHeaderLocID(str) {
+    this.Elements.resultsHeaderLocID.innerHTML = str;
+  }
 
-    this.Elements.lookupResult.appendChild(el);
+  appendOutputLocID(str) {
+    let el = document.createElement("div");
+    el.innerHTML = str;
+
+    this.Elements.lookupResultsLocID.appendChild(el);
+  }
+
+  setOutputHeaderPN(str) {
+    this.Elements.resultsHeaderPN.innerHTML = str;
+  }
+
+  appendOutputPN(lookupResultsPN, str) {
+    let el = document.createElement("div");
+    el.innerHTML = str;
+
+    lookupResultsPN.appendChild(el);
   }
 
   clearOutput() {
-    let el = this.Elements.lookupResult;
+    this.Elements.resultsHeaderLocID.innerHTML = "";
+
+    let el;
+    el = this.Elements.lookupResultsLocID;
+    while (el.firstChild) {
+      el.removeChild(el.firstChild);
+    }
+    el = this.Elements.resultsListPN;
     while (el.firstChild) {
       el.removeChild(el.firstChild);
     }
   }
 
+  appendLookupResultsPN(result, idx) {
+    let rowIdx = result.rowIdx;
+    let item = result.item;
+
+    let el = this.Elements.resultsPN.cloneNode(true);
+
+    let resultsHeaderPN = el.querySelector("#lookup-resultsHeaderPN");
+    resultsHeaderPN.innerHTML = `Part Number: ${item["Part Number"]}`;
+    resultsHeaderPN.id += idx.toString();
+
+    let btnResultsPrintPN = el.querySelector("#lookup-btnResultsPrintPN");
+    btnResultsPrintPN.addEventListener("click",  () => {
+      let val = item["Part Number"];
+      let barcodeData = {
+        data: "IPN-" + val,
+        text: "IPN: " + val
+      };
+      this.onBtnResultsPrintClicked(barcodeData);
+    });
+    btnResultsPrintPN.id += idx.toString();
+
+    let lookupResultsPN = el.querySelector("#lookup-lookupResultsPN");
+    this.appendOutputPN(lookupResultsPN, `Inventory #: ${rowIdx}`);
+    this.appendOutputPN(lookupResultsPN, `Mfr Part Number: ${item["Manufacturer Part Number"]}`);
+    this.appendOutputPN(lookupResultsPN, `Manufactuer: ${item["Manufacturer"]}`);
+    this.appendOutputPN(lookupResultsPN, `Quantity: ${item["Quantity"]}`);
+    this.appendOutputPN(lookupResultsPN, `Description: ${item["Description"]}`);
+    lookupResultsPN.id += idx.toString();
+
+    el.id += idx.toString();
+    this.Elements.resultsListPN.appendChild(el);
+
+    el.style.display = "block";
+    return el;
+  }
+
   onBtnLookupClicked() {
-    let locID = this.Elements.locID.value;
-    let pn = this.Elements.pn.value;
+    let val = this.Elements.value.value;
+    if ((val == null) || (val.length == 0)) {
+      return;
+    }
+
+    let isLocID = this.Elements.typeLocID.toggled;
 
     this.clearOutput();
 
-    if (locID && (locID.length > 0)) {
-      spreadsheet.findInventoryItemsByLocation(locID, (results) => {
+    if (isLocID) {
+      spreadsheet.findInventoryItemsByLocation(val, (results) => {
         if (results != null) {
-          this.rawBarcodeData = {
-            data: "LOC-" + locID,
-            text: "LOC: " + locID
+          this.rawBarcodeDataLocID = {
+            data: "LOC-" + val,
+            text: "LOC: " + val
           };
 
-          for (let result of results) {
-            let rowIdx = result.rowIdx;
-            let item = result.item;
-            this.appendOutput(`Inventory #: ${rowIdx}`);
-            this.appendOutput(`Location ID: ${item["Location"]}`);
-            this.appendOutput(`Part Number: ${item["Part Number"]}`);
-            this.appendOutput(`Mfr Part Number: ${item["Manufacturer Part Number"]}`);
-            this.appendOutput(`Manufactuer: ${item["Manufacturer"]}`);
-            this.appendOutput(`Quantity: ${item["Quantity"]}`);
-            this.appendOutput(`Description: ${item["Description"]}`);
-            this.appendOutput("&nbsp;");
+          this.setOutputHeaderLocID(`Location ID: ${val}`);
+          this.appendOutputLocID(`Number of Items: ${results.length}`);
+          
+          for (let i=0; i<results.length; i++) {
+            let result = results[i];
+
+            this.appendLookupResultsPN(result, i);
           }
 
           this.hidePage();
           this.Elements.results.style.display = "flex";
         }
       });
-    } else if (pn && (pn.length > 0)) {
-      spreadsheet.findInventoryItemByPN(pn, (result) => {
+    } else {
+      spreadsheet.findInventoryItemByPN(val, (result) => {
         if (result != null) {
-          this.rawBarcodeData = {
-            data: "IPN-" + pn,
-            text: "IPN: " + pn
+          this.rawBarcodeDataPN = {
+            data: "IPN-" + val,
+            text: "IPN: " + val
           };
 
-          let rowIdx = result.rowIdx;
           let item = result.item;
-          this.appendOutput(`Inventory #: ${rowIdx}`);
-          this.appendOutput(`Location ID: ${item["Location"]}`);
-          this.appendOutput(`Part Number: ${item["Part Number"]}`);
-          this.appendOutput(`Mfr Part Number: ${item["Manufacturer Part Number"]}`);
-          this.appendOutput(`Manufactuer: ${item["Manufacturer"]}`);
-          this.appendOutput(`Quantity: ${item["Quantity"]}`);
-          this.appendOutput(`Description: ${item["Description"]}`);
-          this.appendOutput("&nbsp;");
+
+          let locID = item["Location"];
+          this.setOutputHeaderLocID(`Location ID: ${locID}`);
+          this.rawBarcodeDataLocID = {
+            data: "LOC-" + locID,
+            text: "LOC: " + locID
+          };
+
+          spreadsheet.findInventoryItemsByLocation(locID, (results) => {
+            if (results != null) {
+              this.appendOutputLocID(`Number of Items: ${results.length} (displaying single item)`);
+            }
+          });
+
+          this.appendLookupResultsPN(result, 0);
 
           this.hidePage();
           this.Elements.results.style.display = "flex";
@@ -198,8 +270,13 @@ class LookupPage extends AppPage {
     return null;
   }
 
-  onBtnResultsPrintClicked() {
-    if (this.rawBarcodeData == null) {
+  onBtnResultsPrintLocIDClicked() {
+    let barcodeData = this.rawBarcodeDataLocID;
+    this.onBtnResultsPrintClicked(barcodeData);
+  }
+
+  onBtnResultsPrintClicked(barcodeData) {
+    if (barcodeData == null) {
       return;
     }
 
@@ -208,8 +285,8 @@ class LookupPage extends AppPage {
       height: 30,
       width: 30,
       scale: 3,
-      text: this.rawBarcodeData.data,
-      alttext: this.rawBarcodeData.text,
+      text: barcodeData.data,
+      alttext: barcodeData.text,
       includetext: true,
       textxalign: "center",
       textxoffset: 33
@@ -329,7 +406,8 @@ class LookupPage extends AppPage {
     this.showPage();
 
     this.clearOutput();
-    this.rawBarcodeData = null;
+    this.rawBarcodeDataLocID = null;
+    this.rawBarcodeDataPN = null;
   }
 
   onInitialize() {
@@ -337,13 +415,19 @@ class LookupPage extends AppPage {
 
     this.Elements = {};
     let elementNames = [
-      "locID",
-      "pn",
+      "type",
+      "typeMenu",
+      "typeLocID",
+      "typePN",
+      "value",
       "btnClear",
       "btnLookup",
       "results",
-      "lookupResult",
-      "btnResultsPrint",
+      "resultsHeaderLocID",
+      "lookupResultsLocID",
+      "btnResultsPrintLocID",
+      "resultsListPN",
+      "resultsPN",
       "btnResultsBack"
     ];
     for (let name of elementNames) {
@@ -358,14 +442,18 @@ class LookupPage extends AppPage {
     });
 
     this.Elements.results.style.display = "none";
-    this.Elements.btnResultsPrint.addEventListener("click",  () => {
-      this.onBtnResultsPrintClicked();
+    this.Elements.btnResultsPrintLocID.addEventListener("click",  () => {
+      this.onBtnResultsPrintLocIDClicked();
     });
     this.Elements.btnResultsBack.addEventListener("click",  () => {
       this.onBtnResultsBackClicked();
     });
 
-    this.rawBarcodeData = null;
+    this.Elements.type.value = this.Elements.typeLocID.value;
+    this.Elements.type._updateButton();
+
+    this.rawBarcodeDataLocID = null;
+    this.rawBarcodeDataPN = null;
       
     //
     window.addEventListener("keydown", (event) => {

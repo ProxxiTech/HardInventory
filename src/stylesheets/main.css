@@ -81,6 +81,10 @@ a {
   grid-template-columns: [l1-start] 85px [l1-end i1-start] auto [i1-end];
 }
 
+.formgrid.fg1w-wide {
+  grid-template-columns: [l1-start] 125px [l1-end i1-start] auto [i1-end];
+}
+
 .formgrid.fg2w {
   grid-template-columns: [l1-start] 85px [l1-end i1-start] auto [i1-end l2-start] 85px [l2-end i2-start] auto [i2-end];
 }
