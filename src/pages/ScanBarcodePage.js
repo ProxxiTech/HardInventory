@@ -317,6 +317,10 @@ class ScanBarcodePage extends AppPage {
   onDataReady() {
     super.onDataReady();
 
+    this.updateCategoryMenu();
+  }
+
+  updateCategoryMenu() {
     let menu = this.Elements.categoryMenu;
 
     // Clear any existing items
@@ -344,7 +348,12 @@ class ScanBarcodePage extends AppPage {
     this.Elements.category._updateButton();
   }
 
-  onEnter() { super.onEnter(); }
+  onEnter() {
+    super.onEnter();
+  
+    this.updateCategoryMenu();
+  }
+
   onExit() {
     super.onExit();
   

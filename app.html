@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <link rel="stylesheet" href="node_modules/xel/stylesheets/vanilla.theme.css">
   <script src="node_modules/xel/xel.min.js"></script>
+  <script src="node_modules/ag-grid/dist/ag-grid.js"></script>
   <title>Hard Inventory</title>
 </head>
 <body>
@@ -195,15 +196,11 @@
         </x-box>
       </div>
     </x-box>
-    <x-box vertical id="inventory-page" class="container" style="display: none;">
-      <p>
-        Inventory table goes here...
-      </p>
+    <x-box vertical id="inventory-page" class="container" style="display: none; height: 100%;">
+      <div id="inventory-grid" class="ag-theme-material" style="height: 100%;"></div>
     </x-box>
-    <x-box vertical id="categories-page" class="container" style="display: none;">
-      <p>
-        Categories table goes here...
-      </p>
+    <x-box vertical id="categories-page" class="container" style="display: none; height: 100%;">
+      <div id="categories-grid" class="ag-theme-material" style="height: 100%;"></div>
     </x-box>
     <x-box vertical id="info-page" class="container" style="display: none;">
       <p>

@@ -1,5 +1,5 @@
-import { remote } from "electron";
-import jetpack from "fs-jetpack";
+// import { remote } from "electron";
+// import jetpack from "fs-jetpack";
 let GoogleSpreadsheet = require("google-spreadsheet");
 let async = require("async");
 
@@ -202,10 +202,10 @@ export function initialize(doc_id, credentials, cb) {
               ]
               */
 
-              catMaxRow = 0;
+              // catMaxRow = 0;
               for (let cell of cells) {
-                if (catMaxRow < cell.row)
-                  catMaxRow = cell.row;
+                // if (catMaxRow < cell.row)
+                //   catMaxRow = cell.row;
 
                 let rowIdx = cell.row - 2;  // First row is the header row
                 let colIdx = cell.col - 1;
@@ -242,10 +242,10 @@ export function initialize(doc_id, credentials, cb) {
               ]
               */
 
-              invMaxRow = 0;
+              // invMaxRow = 0;
               for (let cell of cells) {
-                if (invMaxRow < cell.row)
-                  invMaxRow = cell.row;
+                // if (invMaxRow < cell.row)
+                //   invMaxRow = cell.row;
 
                 let rowIdx = cell.row - 2;  // First row is the header row
                 let colIdx = cell.col - 1;
@@ -452,6 +452,96 @@ export function addInventoryItem(item, cb) {
   let newRowIdx = invTable.length;
 
   setInventoryItem(newRowIdx, item, cb);
+}
+
+export function removeInventoryItem(rowIdx, cb) {
+  invWorksheet.getRows({}, (err, rows) => {
+    if (err != null) {
+      return cb(err, null);
+    }
+
+    let row = rows[rowIdx];
+    row.del((err) => {
+      if (err == null) {
+        invTable.splice(rowIdx, 1);
+        invMaxRow--;
+      }
+
+      return cb(err);
+    });
+  });
+}
+
+function setCategoryItemInternal(rowIdx, rowNum, item, cb) {
+  catWorksheet.getCells(
+    { "min-row": rowNum, "max-row": rowNum, "min-col": 1, "max-col": catNumCols, "return-empty": true },
+    function(err, cells) {
+      if (err) {
+        return cb(err, null);
+      }
+
+      for (let col in item) {
+        let colIdx = catHeaderNameToIndex[col];
+
+        cells[colIdx].value = item[col];
+      }
+
+      catTable[rowIdx] = new Array(catNumCols);
+      for (let i=0; i<cells.length; i++) {
+        catTable[rowIdx][i] = cells[i];
+      }
+
+      catWorksheet.bulkUpdateCells(cells);
+
+      cb(null, rowIdx);
+    });
+}
+
+export function setCategoryItem(rowIdx, item, cb) {
+  let rowNum = rowIdx + 2;  // First row is the headers
+  if (rowNum > catWorksheet.rowCount) {
+    catWorksheet.resize({ rowCount: catWorksheet.rowCount + 100 }, function(err) {
+      if (err != null) {
+        return cb(err, null);
+      }
+
+      catWorksheet.rowCount += 100;
+
+      setCategoryItemInternal(rowIdx, rowNum, item, cb);
+    });
+  } else {
+    setCategoryItemInternal(rowIdx, rowNum, item, cb);
+  }
+}
+
+export function addCategoryItem(item, cb) {
+  let newRowIdx = catTable.length;
+
+  setCategoryItem(newRowIdx, item, (err, res) => {
+    if (err != null) {
+      catMaxRow++;
+    }
+
+    cb(err, res);
+  });
+}
+
+export function removeCategoryItem(rowIdx, cb) {
+  catWorksheet.getRows({}, (err, rows) => {
+    if (err != null) {
+      return cb(err, null);
+    }
+
+    let row = rows[rowIdx];
+    row.del((err) => {
+      if (err == null) {
+        catTable.splice(rowIdx, 1);
+        catMaxRow--;
+      }
+
+      return cb(err);
+    });
+  });
 }
 
 export function isInternalPartNumber(pn) {

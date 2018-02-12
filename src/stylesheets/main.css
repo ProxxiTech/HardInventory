@@ -13,7 +13,6 @@ body {
   height: 100%;
   justify-content: flex-start;
   align-items: stretch;
-  font-family: sans-serif;
   color: #525252;
 
   --accent-color-h: 290;
