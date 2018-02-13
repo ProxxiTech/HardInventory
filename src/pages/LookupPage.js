@@ -196,6 +196,7 @@ class LookupPage extends AppPage {
     if ((val == null) || (val.length == 0)) {
       return;
     }
+    val = val.toUpperCase();
 
     let isLocID = this.Elements.typeLocID.toggled;
 
