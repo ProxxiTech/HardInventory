@@ -150,11 +150,11 @@
         <x-radios vertical class="fgR45 fgC34" style="align-self: flex-start;">
           <x-box>
             <x-radio id="scan-barcode-addQty" type='spin' toggled></x-radio>
-            <x-label for="scan-barcode-addQty" id='label-1'>Add to Quantity</x-label>
+            <x-label for="scan-barcode-addQty">Add to Quantity</x-label>
           </x-box>
           <x-box>
             <x-radio id="scan-barcode-setQty" type='spin'></x-radio>
-            <x-label for="scan-barcode-setQty" id='label-1'>Set Quantity</x-label>
+            <x-label for="scan-barcode-setQty">Set Quantity</x-label>
           </x-box>
         </x-radios>
       </div>
@@ -183,18 +183,12 @@
         Barcode: <img id="scan-barcode-barcodeResult"><br/>
         <div id="scan-barcode-barcodeError"></div>
       </p>
-      <div class="formgrid fg1w">
-        <!-- Buttons -->
-        <x-box class="fgR1 fgC2" style="justify-self: flex-end;">
-          <!-- Back button -->
-          <x-button id="scan-barcode-btnResultsBack" skin="textured" style="margin-left: 20px;">
-            <x-box>
-              <x-icon name='chevron-left'></x-icon>
-              <x-label>Back</x-label>
-            </x-box>
-          </x-button>
+      <x-button id="scan-barcode-btnResultsBack" skin="textured">
+        <x-box>
+          <x-icon name='chevron-left'></x-icon>
+          <x-label>Back</x-label>
         </x-box>
-      </div>
+      </x-button>
     </x-box>
     <x-box vertical id="inventory-page" class="container" style="display: none; height: 100%;">
       <div id="inventory-grid" class="ag-theme-material" style="height: 100%;"></div>
