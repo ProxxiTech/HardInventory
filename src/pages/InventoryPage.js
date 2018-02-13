@@ -48,6 +48,24 @@ class InventoryPage extends AppPage {
     // columnDefs[0].suppressSorting = false;
     columnDefs[spreadsheet.invHeaderNameToIndex["pn"]].sort = "asc";
 
+    let numericColumnNames = ["Quantity"];
+    for (let numericColumnName of numericColumnNames) {
+      let numericColumnIndex = spreadsheet.invHeaderNameToIndex[numericColumnName];
+
+      columnDefs[numericColumnIndex].valueGetter = (params) => {
+        let val = params.data[params.colDef.field];
+        if (val === null) {
+          return null;
+        }
+        return parseInt(val);
+      };
+      // columnDefs[numericColumnIndex].valueFormatter = (params) => {
+      //   return params.value.toString();
+      // };
+      columnDefs[numericColumnIndex].filter = "agNumberColumnFilter";
+      columnDefs[numericColumnIndex].filterParams = { inRangeInclusive: true };
+    }
+
     let rowData = [];
     for (let i=0; i<spreadsheet.getInventoryItemCount(); i++) {
       let item = spreadsheet.getInventoryItem(i);
@@ -68,15 +86,21 @@ class InventoryPage extends AppPage {
       },
 
       defaultColDef: {
+        // Auto-sized when in onEnter(), but until then we want everything to be "on screen"
+        width: 50,
+
         editable: true,
+        filter: "agTextColumnFilter",
       },
 
       suppressMovableColumns: true,
+      enableSorting: true,
+      enableColResize: true,
+      enableFilter: true,
       suppressRowDrag: true,
 
       editType: "fullRow",
       stopEditingWhenGridLosesFocus: true,
-      enableSorting: true,
       rowSelection: "single",
       rowDeselection: true,
       suppressScrollOnNewData: true,
@@ -146,7 +170,23 @@ class InventoryPage extends AppPage {
   onEnter() {
     super.onEnter();
 
-    this.gridOptions.api.sizeColumnsToFit();
+    // this.gridOptions.api.sizeColumnsToFit();
+    
+    let allColumnIds = [];
+    this.gridOptions.columnApi.getAllColumns().forEach((column) => {
+      allColumnIds.push(column.colId);
+    });
+    // Start with the last column, as if it's off-screen it won't be resized
+    allColumnIds.reverse();
+    this.gridOptions.columnApi.autoSizeColumns(allColumnIds);
+
+    let overrideWidths = {
+      // "Quantity": 125,
+      "Description": 500,
+    };
+    for (let [columnName, width] of Object.entries(overrideWidths)) {
+      this.gridOptions.columnApi.setColumnWidth(columnName, width);
+    }
   }
 
   onExit() { super.onExit(); }

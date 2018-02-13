@@ -46,8 +46,37 @@ class CategoriesPage extends AppPage {
     columnDefs[0].width = 150;
     columnDefs[0].maxWidth = 150;
     columnDefs[0].suppressSizeToFit = true;
-    columnDefs[0].suppressSorting = false;
+    // columnDefs[0].suppressSorting = false;
     columnDefs[0].sort = "asc";
+    columnDefs[0].comparator = (valueA, valueB, nodeA, nodeB, isInverted) => {
+      if (nodeA.data.isNew) {
+        return isInverted ? -1 : 1;
+      }
+      if (nodeB.data.isNew) {
+        return isInverted ? 1 : -1;
+      }
+
+      return valueA - valueB;
+    };
+    columnDefs[0].valueGetter = (params) => {
+      let val = params.data[params.colDef.field];
+      if (val === null) {
+        return null;
+      }
+      return parseInt(val);
+    };
+    // columnDefs[0].valueFormatter = (params) => {
+    //   return params.value.toString();
+    // };
+    columnDefs[0].filter = "agNumberColumnFilter";
+    columnDefs[0].filterParams = { inRangeInclusive: true };
+    columnDefs[0].cellRenderer = (params) => {
+      if ((params.value !== null) && (params.value !== "")) {
+        return params.value.toString();
+      }
+
+      return "<span style='opacity: 0.38;'>new</style>";
+    };
 
     let rowData = [];
     for (let i=0; i<spreadsheet.getCategoryItemCount(); i++) {
@@ -83,7 +112,27 @@ class CategoriesPage extends AppPage {
 
       defaultColDef: {
         editable: true,
-        suppressSorting: true,
+        // suppressSorting: true,
+        // valueGetter: (params) => {
+        //   let val = params.data[params.colDef.field];
+        //   if (val === null) {
+        //     return null;
+        //   }
+        //   return val.toString().trim();
+        // },
+        filter: "agTextColumnFilter",
+        // filterParams: {
+        //   textFormatter: (gridValue) => {
+        //     return gridValue.toString().trim().toLowerCase();
+        //   }
+        // },
+        cellRenderer: (params) => {
+          if ((params.value !== null) && (params.value !== "")) {
+            return params.value;
+          }
+
+          return "<span style='opacity: 0.38;'>Double-click to edit</style>";
+        },
 
         comparator: (valueA, valueB, nodeA, nodeB, isInverted) => {
           if (nodeA.data.isNew) {
@@ -93,16 +142,18 @@ class CategoriesPage extends AppPage {
             return isInverted ? 1 : -1;
           }
 
-          return valueA - valueB;
+          return valueA.localeCompare(valueB);
         }
       },
 
       suppressMovableColumns: true,
+      enableSorting: true,
+      enableColResize: true,
+      enableFilter: true,
       suppressRowDrag: true,
 
       editType: "fullRow",
       stopEditingWhenGridLosesFocus: true,
-      enableSorting: true,
       rowSelection: "single",
       rowDeselection: true,
       suppressScrollOnNewData: true,
