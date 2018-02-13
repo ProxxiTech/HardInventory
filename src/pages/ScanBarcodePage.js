@@ -364,7 +364,8 @@ class ScanBarcodePage extends AppPage {
     let mfr = this.Elements.mfr.value.trim();
     let mpn = this.Elements.mpn.value.trim().toUpperCase();
     let desc = this.Elements.desc.value.trim();
-    let qty = parseInt(this.Elements.qty.value.trim());
+    let qtyStr = this.Elements.qty.value.trim();
+    let qty = qtyStr ? parseInt(qtyStr) : 0;
     let qtyAction = this.Elements.qtyAction.value;
 
     this.rawBarcodeDataLocID = {
