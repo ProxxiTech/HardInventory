@@ -141,7 +141,12 @@ class LookupPage extends AppPage {
     lookupResultsPN.appendChild(el);
   }
 
-  clearOutput() {
+  clearResults() {
+    this.Elements.results.style.display = "none";
+
+    this.rawBarcodeDataLocID = null;
+    this.rawBarcodeDataPN = null;
+
     this.Elements.resultsHeaderLocID.innerHTML = "";
 
     let el;
@@ -200,7 +205,7 @@ class LookupPage extends AppPage {
 
     let isLocID = this.Elements.typeLocID.toggled;
 
-    this.clearOutput();
+    this.clearResults();
 
     if (isLocID) {
       spreadsheet.findInventoryItemsByLocation(val, (results) => {
@@ -212,7 +217,7 @@ class LookupPage extends AppPage {
 
           this.setOutputHeaderLocID(`Location ID: ${val}`);
           this.appendOutputLocID(`Number of Items: ${results.length}`);
-          
+
           for (let i=0; i<results.length; i++) {
             let result = results[i];
 
@@ -383,11 +388,11 @@ class LookupPage extends AppPage {
       //   let webContentsID = printWindow.webContents.id;
       //   ipcRenderer.send("setBarcodeData", { webContentsID, pngImage });
       // });
-      
+
       // printWindow.webContents.on("did-finish-load", () => {
       //   let printers = printWindow.webContents.getPrinters();
       //   console.log(JSON.stringify(printers, null, 4));
-        
+
       //   printWindow.webContents.print({ silent: true });
 
       //   setTimeout(() => {
@@ -403,12 +408,9 @@ class LookupPage extends AppPage {
   }
 
   onBtnResultsBackClicked() {
-    this.Elements.results.style.display = "none";
-    this.showPage();
+    this.clearResults();
 
-    this.clearOutput();
-    this.rawBarcodeDataLocID = null;
-    this.rawBarcodeDataPN = null;
+    this.showPage();
   }
 
   onInitialize() {
@@ -442,6 +444,8 @@ class LookupPage extends AppPage {
       this.onBtnLookupClicked();
     });
 
+    this.clearResults();
+
     this.Elements.results.style.display = "none";
     this.Elements.btnResultsPrintLocID.addEventListener("click",  () => {
       this.onBtnResultsPrintLocIDClicked();
@@ -453,9 +457,6 @@ class LookupPage extends AppPage {
     this.Elements.type.value = this.Elements.typeLocID.value;
     this.Elements.type._updateButton();
 
-    this.rawBarcodeDataLocID = null;
-    this.rawBarcodeDataPN = null;
-      
     //
     window.addEventListener("keydown", (event) => {
       this.onKeyDown(event);
@@ -466,7 +467,7 @@ class LookupPage extends AppPage {
   onExit() {
     super.onExit();
 
-    this.Elements.results.style.display = "none";
+    this.clearResults();
   }
 }
 

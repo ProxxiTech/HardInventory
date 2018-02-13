@@ -1,4 +1,6 @@
-let bwipjs = require("bwip-js");
+const bwipjs = require("bwip-js");
+const Jimp = require("jimp");
+const printer = require("printer");
 
 import * as spreadsheet from "../spreadsheet/spreadsheet";
 import octopartLookup from "../helpers/octopartLookup";
@@ -226,6 +228,92 @@ class ScanBarcodePage extends AppPage {
     event.preventDefault();
   }
 
+  _getDefaultPrinterName() {
+    let printers = printer.getPrinters();
+    for (let p of printers) {
+      if ((p.name.indexOf("QL_800") >= 0) || (p.name.indexOf("QL-800") >= 0)) {
+        return p.name;
+      }
+    }
+    for (let p of printers) {
+      if (p.isDefault) {
+        return p.name;
+      }
+    }
+
+    return null;
+  }
+
+  onBtnResultsPrintClicked(barcodeData) {
+    if (barcodeData == null) {
+      return;
+    }
+
+    bwipjs.toBuffer({
+      bcid:"qrcode",
+      height: 30,
+      width: 30,
+      scale: 3,
+      text: barcodeData.data,
+      alttext: barcodeData.text,
+      includetext: true,
+      textxalign: "center",
+      textxoffset: 33
+    }, (err, pngImage) => {
+      if (err != null) {
+        console.error(`Error generating barcode buffer: ${err}`);
+        return;
+      }
+
+      Jimp.read(pngImage, (err, image) => {
+        if (err != null) {
+          console.error(`Error reading PNG buffer: ${err}`);
+          return;
+        }
+
+        image.background(0xFFFFFFFF);
+        image.quality(100);
+
+        image.getBuffer(Jimp.MIME_JPEG, (err, jpgImage) => {
+          if (err != null) {
+            console.error(`Error generating JPEG buffer: ${err}`);
+            return;
+          }
+
+          let printerName = this._getDefaultPrinterName();
+          if (printerName != null) {
+            printer.printDirect({
+              data: jpgImage,
+              printer: printerName,
+              type: "JPEG",
+              options: {
+                "PageSize": "DC08",
+                "PageRegion": "DC08",
+                "ImageableArea": "DC08",
+                "PaperDimension": "DC08",
+                "BrTapeLength": "42mm",
+                "BrMargin": "3.0",
+                "BrResolution": "BrQuality300x300dpi",
+                "BrHalftonePattern": "BrBinary",
+                "BrMultiColor": "BrMultiColorMonochrome",
+                "BrBiDiPrint": "ON",
+                "BrAutoTapeCut": "ON",
+                "BrCutAtEnd": "ON",
+                "BrRemoveBlkSpace": "ON",
+              },
+              success: (jobID) => {
+                console.log(`Printed with job id ${jobID}`);
+              },
+              error: (err) => {
+                console.error(`Error printing: ${err}`);
+              }
+            });
+          }
+        });
+      });
+    });
+  }
+
   clearFormFields() {
     this.Elements.locID.value = "";
     this.Elements.pn.value = "";
@@ -240,6 +328,9 @@ class ScanBarcodePage extends AppPage {
     this.Elements.results.style.display = "none";
     this.Elements.errorResults.style.display = "none";
     this.Elements.successResults.style.display = "none";
+
+    this.rawBarcodeDataLocID = null;
+    this.rawBarcodeDataPN = null;
 
     let el;
 
@@ -276,10 +367,19 @@ class ScanBarcodePage extends AppPage {
     let qty = parseInt(this.Elements.qty.value.trim());
     let qtyAction = this.Elements.qtyAction.value;
 
+    this.rawBarcodeDataLocID = {
+      data: "LOC-" + locID,
+      text: "LOC: " + locID
+    };
+    this.rawBarcodeDataPN = {
+      data: "IPN-" + pn,
+      text: "IPN: " + pn
+    };
+
     let newItemIndex = 123;
 
     this.Elements.resultsHeaderLocID.innerHTML = `Location ID: ${locID}`;
-    this.appendOutput(this.Elements.scanBarcodeResultsLocID, "Location of new inventory item.");
+    this.appendOutput(this.Elements.scanBarcodeResultsLocID, "Location that this item will be stored.");
 
     this.Elements.resultsHeaderPN.innerHTML = `Part Number: ${pn}`;
     this.appendOutput(this.Elements.scanBarcodeResultsPN, `Inventory #: ${newItemIndex}`);
@@ -288,14 +388,20 @@ class ScanBarcodePage extends AppPage {
     this.appendOutput(this.Elements.scanBarcodeResultsPN, `Quantity: ${qtyAction} ${qty}`);
     this.appendOutput(this.Elements.scanBarcodeResultsPN, `Description: ${desc}`);
 
-    // TODO: Read barcode
-
-    // TODO: Create location/IPN barcode //
-
-    // this.clearFormFields();
+    //
     this.hidePage();
     this.Elements.results.style.display = "flex";
     this.Elements.successResults.style.display = "flex";
+  }
+
+  onBtnResultsPrintLocIDClicked() {
+    let barcodeData = this.rawBarcodeDataLocID;
+    this.onBtnResultsPrintClicked(barcodeData);
+  }
+
+  onBtnResultsPrintPNClicked() {
+    let barcodeData = this.rawBarcodeDataPN;
+    this.onBtnResultsPrintClicked(barcodeData);
   }
 
   onBtnResultsBackClicked() {
@@ -343,6 +449,13 @@ class ScanBarcodePage extends AppPage {
     });
 
     this.clearResults();
+
+    this.Elements.btnResultsPrintLocID.addEventListener("click",  () => {
+      this.onBtnResultsPrintLocIDClicked();
+    });
+    this.Elements.btnResultsPrintPN.addEventListener("click",  () => {
+      this.onBtnResultsPrintPNClicked();
+    });
 
     this.Elements.btnResultsBack.addEventListener("click",  () => {
       this.onBtnResultsBackClicked();
