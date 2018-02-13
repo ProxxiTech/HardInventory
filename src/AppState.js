@@ -27,9 +27,9 @@ class AppState {
 
   changePage(newPageName) {
     if (this.activePage) {
-      if (this.activePage.pageName === newPageName) {
-        return;
-      }
+      // if (this.activePage.pageName === newPageName) {
+      //   return;
+      // }
 
       this.activePage.onExit();
     }
