@@ -20,18 +20,11 @@ class ScanBarcodePage extends AppPage {
     console.log(JSON.stringify(o, null, 4));
   }
 
-  appendOutput(str) {
-    let el = document.createElement("span");
-    el.innerHTML = str + "<br/>";
+  appendOutput(parent, str) {
+    let el = document.createElement("div");
+    el.innerHTML = str;
 
-    this.Elements.barcodeData.appendChild(el);
-  }
-
-  clearOutput() {
-    let el = this.Elements.barcodeData;
-    while (el.firstChild) {
-      el.removeChild(el.firstChild);
-    }
+    parent.appendChild(el);
   }
 
   createBarcode(barcodeData) {
@@ -240,8 +233,32 @@ class ScanBarcodePage extends AppPage {
     this.Elements.mpn.value = "";
     this.Elements.desc.value = "";
     this.Elements.qty.value = "";
-    this.Elements.addQty.toggled = true;
-    this.Elements.setQty.toggled = false;
+    this.Elements.qtyAction.value = "add";
+  }
+
+  clearResults() {
+    this.Elements.results.style.display = "none";
+    this.Elements.errorResults.style.display = "none";
+    this.Elements.successResults.style.display = "none";
+
+    let el;
+
+    el = this.Elements.errorResults;
+    while (el.firstChild) {
+      el.removeChild(el.firstChild);
+    }
+
+    this.Elements.resultsHeaderLocID.innerHTML = "";
+    this.Elements.resultsHeaderPN.innerHTML = "";
+
+    el = this.Elements.scanBarcodeResultsLocID;
+    while (el.firstChild) {
+      el.removeChild(el.firstChild);
+    }
+    el = this.Elements.scanBarcodeResultsPN;
+    while (el.firstChild) {
+      el.removeChild(el.firstChild);
+    }
   }
 
   onBtnClearClicked() {
@@ -249,7 +266,27 @@ class ScanBarcodePage extends AppPage {
   }
 
   onBtnAddClicked() {
-    // TODO: Retrieve form values
+    let locID = this.Elements.locID.value.trim().toUpperCase();
+    let pnPrefix = this.Elements.category.value.trim();
+    let pnSuffix = this.Elements.pn.value.trim().toUpperCase();
+    let pn = `${pnPrefix}-${pnSuffix}`;
+    let mfr = this.Elements.mfr.value.trim();
+    let mpn = this.Elements.mpn.value.trim().toUpperCase();
+    let desc = this.Elements.desc.value.trim();
+    let qty = parseInt(this.Elements.qty.value.trim());
+    let qtyAction = this.Elements.qtyAction.value;
+
+    let newItemIndex = 123;
+
+    this.Elements.resultsHeaderLocID.innerHTML = `Location ID: ${locID}`;
+    this.appendOutput(this.Elements.scanBarcodeResultsLocID, "Location of new inventory item.");
+
+    this.Elements.resultsHeaderPN.innerHTML = `Part Number: ${pn}`;
+    this.appendOutput(this.Elements.scanBarcodeResultsPN, `Inventory #: ${newItemIndex}`);
+    this.appendOutput(this.Elements.scanBarcodeResultsPN, `Mfr Part Number: ${mpn}`);
+    this.appendOutput(this.Elements.scanBarcodeResultsPN, `Manufactuer: ${mfr}`);
+    this.appendOutput(this.Elements.scanBarcodeResultsPN, `Quantity: ${qtyAction} ${qty}`);
+    this.appendOutput(this.Elements.scanBarcodeResultsPN, `Description: ${desc}`);
 
     // TODO: Read barcode
 
@@ -258,15 +295,13 @@ class ScanBarcodePage extends AppPage {
     // this.clearFormFields();
     this.hidePage();
     this.Elements.results.style.display = "flex";
+    this.Elements.successResults.style.display = "flex";
   }
 
   onBtnResultsBackClicked() {
-    this.Elements.results.style.display = "none";
-    this.showPage();
+    this.clearResults();
 
-    this.clearOutput();
-    this.Elements.barcodeResult.src = "";
-    this.Elements.barcodeError.textContent = "";
+    this.showPage();
   }
 
   onInitialize() {
@@ -282,14 +317,18 @@ class ScanBarcodePage extends AppPage {
       "mpn",
       "desc",
       "qty",
-      "addQty",
-      "setQty",
+      "qtyAction",
       "btnClear",
       "btnAdd",
       "results",
-      "barcodeData",
-      "barcodeResult",
-      "barcodeError",
+      "errorResults",
+      "successResults",
+      "resultsHeaderLocID",
+      "btnResultsPrintLocID",
+      "scanBarcodeResultsLocID",
+      "resultsHeaderPN",
+      "btnResultsPrintPN",
+      "scanBarcodeResultsPN",
       "btnResultsBack"
     ];
     for (let name of elementNames) {
@@ -303,11 +342,12 @@ class ScanBarcodePage extends AppPage {
       this.onBtnAddClicked();
     });
 
-    this.Elements.results.style.display = "none";
+    this.clearResults();
+
     this.Elements.btnResultsBack.addEventListener("click",  () => {
       this.onBtnResultsBackClicked();
     });
-      
+
     //
     window.addEventListener("keydown", (event) => {
       this.onKeyDown(event);
@@ -332,7 +372,7 @@ class ScanBarcodePage extends AppPage {
     let count = spreadsheet.getCategoryItemCount();
     for (let catIdx=0; catIdx<count; catIdx++) {
       let catItem = spreadsheet.getCategoryItem(catIdx);
-      
+
       let menuItem = document.createElement("x-menuitem");
       menuItem.value = `${catItem["Category"]}`;
       menuItem.toggled = (catIdx === 0);
@@ -350,14 +390,14 @@ class ScanBarcodePage extends AppPage {
 
   onEnter() {
     super.onEnter();
-  
+
     this.updateCategoryMenu();
   }
 
   onExit() {
     super.onExit();
-  
-    this.Elements.results.style.display = "none";
+
+    this.clearResults();
   }
 }
 

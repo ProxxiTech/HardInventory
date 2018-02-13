@@ -147,13 +147,13 @@
         <x-label class="fgR4 fgC1">Quantity</x-label>
         <x-input id="scan-barcode-qty" class="fgR4 fgC2" type='text' value='5000' style="justify-self: stretch; max-width: 100%;"></x-input>
         <!-- Set/Add quantity -->
-        <x-radios vertical class="fgR45 fgC34" style="align-self: flex-start;">
+        <x-radios id="scan-barcode-qtyAction" vertical class="fgR45 fgC34" style="align-self: flex-start;">
           <x-box>
-            <x-radio id="scan-barcode-addQty" type='spin' toggled></x-radio>
+            <x-radio id="scan-barcode-addQty" value="add" toggled></x-radio>
             <x-label for="scan-barcode-addQty">Add to Quantity</x-label>
           </x-box>
           <x-box>
-            <x-radio id="scan-barcode-setQty" type='spin'></x-radio>
+            <x-radio id="scan-barcode-setQty" value="set"></x-radio>
             <x-label for="scan-barcode-setQty">Set Quantity</x-label>
           </x-box>
         </x-radios>
@@ -176,13 +176,36 @@
       </div>
     </x-box>
     <x-box vertical id="scan-barcode-results" class="container" style="display: none;">
-      <p>
-        Scanned: <pre><div id="scan-barcode-barcodeData"></div></pre>
-      </p>
-      <p>
-        Barcode: <img id="scan-barcode-barcodeResult"><br/>
-        <div id="scan-barcode-barcodeError"></div>
-      </p>
+      <x-box vertical id="scan-barcode-errorResults" style="display: none;">
+      </x-box>
+      <x-box vertical id="scan-barcode-successResults" style="display: none;">
+        <x-card style="margin-top: 0px;">
+          <header>
+            <strong id="scan-barcode-resultsHeaderLocID" style="font-size: larger;"></strong>
+            <x-button id="scan-barcode-btnResultsPrintLocID" skin="textured" style="float: right;">
+              <x-box>
+                <x-icon name='print'></x-icon>
+                <x-label>Print Barcode</x-label>
+              </x-box>
+            </x-button>
+          </header>
+          <main id="scan-barcode-scanBarcodeResultsLocID">
+          </main>
+        </x-card>
+        <x-card style="margin-top: 0px;">
+          <header>
+            <strong id="scan-barcode-resultsHeaderPN" style="font-size: larger;"></strong>
+            <x-button id="scan-barcode-btnResultsPrintPN" skin="textured" style="float: right;">
+              <x-box>
+                <x-icon name='print'></x-icon>
+                <x-label>Print Barcode</x-label>
+              </x-box>
+            </x-button>
+          </header>
+          <main id="scan-barcode-scanBarcodeResultsPN">
+          </main>
+        </x-card>
+      </x-box>
       <x-button id="scan-barcode-btnResultsBack" skin="textured">
         <x-box>
           <x-icon name='chevron-left'></x-icon>
