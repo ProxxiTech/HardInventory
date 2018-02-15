@@ -301,13 +301,40 @@ function findInventoryItemInternal(findColIdx, value, cb) {
 }
 
 function findInventoryItemsInternal(findColIdx, value, cb) {
+  value = value.toLowerCase();
+
   let results = [];
 
   for (let rowIdx=0; rowIdx<invTable.length; rowIdx++) {
     let row = invTable[rowIdx];
     let itemValue = row[findColIdx].value;
 
-    if (itemValue.toLowerCase() === value.toLowerCase()) {
+    if (itemValue.toLowerCase() === value) {
+      let item = {};
+      for (let cell of row) {
+        let colIdx = cell.col - 1;
+        let colName = invHeaderIndexToName[colIdx];
+
+        item[colName] = cell.value;
+      }
+
+      results.push({ rowIdx, item });
+    }
+  }
+
+  cb((results.length > 0) ? results : null);
+}
+
+function findPrefixedInventoryItemsInternal(findColIdx, prefix, cb) {
+  prefix = prefix.toLowerCase();
+
+  let results = [];
+
+  for (let rowIdx=0; rowIdx<invTable.length; rowIdx++) {
+    let row = invTable[rowIdx];
+    let itemValue = row[findColIdx].value;
+
+    if (itemValue.toLowerCase().indexOf(prefix) == 0) {
       let item = {};
       for (let cell of row) {
         let colIdx = cell.col - 1;
@@ -339,6 +366,12 @@ export function findInventoryItemsByLocation(loc, cb) {
   let locColIdx = invHeaderNameToIndex["loc"];
 
   findInventoryItemsInternal(locColIdx, loc, cb);
+}
+
+export function findInventoryItemsByCategory(cat, cb) {
+  let pnColIdx = invHeaderNameToIndex["pn"];
+
+  findPrefixedInventoryItemsInternal(pnColIdx, cat, cb);
 }
 
 export function getInventoryItemDirect(rowIdx, cb) {
@@ -425,9 +458,9 @@ function setInventoryItemInternal(rowIdx, rowNum, item, cb) {
         invTable[rowIdx][i] = cells[i];
       }
 
-      invWorksheet.bulkUpdateCells(cells);
-
-      cb(null, rowIdx);
+      invWorksheet.bulkUpdateCells(cells, () => {
+        cb(null, rowIdx);
+      });
     });
 }
 

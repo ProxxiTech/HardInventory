@@ -61,116 +61,167 @@ class ScanBarcodePage extends AppPage {
   }
 
   processBarcodeDataMatrix(kbeData) {
+    let validPN = false;
+    this.Elements.category.value = "0";
+
     // P<internalPartNumber>
     let internalPartNumber = kbeData[1].join("");
     internalPartNumber = internalPartNumber.substring(internalPartNumber.indexOf("P") + 1);
-    this.appendOutput("PN: " + internalPartNumber);
+    let pnPrefixEnd = internalPartNumber.indexOf("-");
+    if (pnPrefixEnd > 0) {
+      let pnPrefix = internalPartNumber.substring(0, pnPrefixEnd);
+      let pnSuffix = internalPartNumber.substring(pnPrefixEnd + 1);
+      if ((pnPrefix.length > 0) && (pnSuffix.length > 0)) {
+        // Valid PN's are alphanumeric only
+        if (pnSuffix.indexOf("-") < 0) {
+          this.Elements.category.value = pnPrefix;
+          this.Elements.pn.value = pnSuffix;
+
+          validPN = true;
+        }
+      }
+    }
 
     // 1P<manufacturerPartNumber>
     let manufacturerPartNumber = kbeData[2].join("");
     manufacturerPartNumber = manufacturerPartNumber.substring(manufacturerPartNumber.indexOf("P") + 1);
-    this.appendOutput("MPN: " + manufacturerPartNumber);
+    this.Elements.mpn.value = manufacturerPartNumber;
+    if (manufacturerPartNumber.length > 0) {
+      // Lookup the MPN on Octopart
+      octopartLookup(manufacturerPartNumber, (err, octopartMfr, octopartDesc, octopartCat) => {
+        if (err) {
+          return console.error(err);
+        }
+
+        if (octopartMfr)
+          this.Elements.mfr.value = octopartMfr;
+        if (octopartDesc)
+          this.Elements.desc.value = octopartDesc;
+
+        if (!validPN) {
+          if (octopartCat) {
+            this.Elements.category.value = octopartCat;
+          }
+
+          spreadsheet.findInventoryItemByMPN(manufacturerPartNumber, (invResults) => {
+            if (invResults) {
+              let invItem = invResults.item;
+              let ipn = invItem["Part Number"];
+
+              let pnPrefixEnd = ipn.indexOf("-");
+              if (pnPrefixEnd > 0) {
+                let pnPrefix = ipn.substring(0, pnPrefixEnd);
+                let pnSuffix = ipn.substring(pnPrefixEnd + 1);
+                if ((pnPrefix.length > 0) && (pnSuffix.length > 0)) {
+                  // Valid PN's are alphanumeric only
+                  if (pnSuffix.indexOf("-") < 0) {
+                    this.Elements.category.value = pnPrefix;
+                    this.Elements.pn.value = pnSuffix;
+
+                    validPN = true;
+                  }
+                }
+              }
+            }
+
+            if (!validPN && octopartCat) {
+              // Generate a new IPN as CAT-(catMaxIPN+1)
+              spreadsheet.findInventoryItemsByCategory(octopartCat, (results) => {
+                let highestPN = 0;
+
+                if (results) {
+                  for (let invItem of results) {
+                    let ipn = invItem.item["Part Number"];
+
+                    if (ipn) {
+                      let pnPrefixEnd = ipn.indexOf("-");
+                      if (pnPrefixEnd > 0) {
+                        let pnSuffix = ipn.substring(pnPrefixEnd + 1);
+                        if (pnSuffix.length > 0) {
+                          let pn = parseInt(pnSuffix, 10);
+                          if (pn > highestPN) {
+                            highestPN = pn;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+
+                this.Elements.pn.value = `${highestPN+1}`.padStart(4, "0");
+              });
+            }
+          });
+        }
+      });
+    }
 
     // Q<quantity>
-    let quantity = kbeData[8].join("");
-    quantity = parseInt(quantity.substring(quantity.indexOf("Q") + 1));
-    this.appendOutput("Q: " + quantity);
+    let quantityStr = kbeData[8].join("");
+    quantityStr = quantityStr.substring(quantityStr.indexOf("Q") + 1);
+    let quantity = quantityStr ? parseInt(quantityStr) : 0;
+    this.Elements.qty.value = quantity.toString();
 
     //   for (let i=3; i<kbeData.length; i++) {
     //     appendOutput(kbeData[i].join(''));
     //   }
-
-    // let barcodeData = internalPartNumber + "\u000D" + manufacturerPartNumber + "\u000D" + quantity;
-    let barcodeData = {
-      data: `IPN-${internalPartNumber}`,
-      text: `IPN: ${internalPartNumber}`
-    };
-    this.createBarcode(barcodeData);
-
-    spreadsheet.findInventoryItemByMPN(manufacturerPartNumber, (res) => {
-      if (res) {
-        // Update
-        let rowIdx = res.rowIdx;
-        let item = res.item;
-
-        item.Quantity = parseInt(item.Quantity) + parseInt(quantity);
-
-        // If item['Part Number'] is NOT an internal part number (e.g. a distributor PN),
-        // and we have a real internal part number from this scan, update it.
-        if (!spreadsheet.isInternalPartNumber(item["Part Number"]) && spreadsheet.isInternalPartNumber(internalPartNumber)) {
-          item["Part Number"] = internalPartNumber;
-        }
-
-        spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
-          this.logAll("Inventory item updated", rowIdx);
-        });
-      } else {
-        // Add
-        let item = {
-          loc: '="A0"',
-          pn: `="${internalPartNumber}"`,
-          mpn: `="${manufacturerPartNumber}"`,
-          mfr: '="Unknown"',
-          qty: quantity,
-          desc: '=""'
-        };
-        spreadsheet.addInventoryItem(item, (err, rowIdx) => {
-          this.logAll("Inventory item added", rowIdx);
-
-          // Lookup the MPN on Octopart
-          octopartLookup(manufacturerPartNumber, (err, octopartMfr, octopartDesc) => {
-            if (err) {
-              console.log(err);
-              return;
-            }
-
-            if (octopartMfr != null)
-              item.mfr = `="${octopartMfr}"`;
-            if (octopartDesc != null)
-              item.desc = `="${octopartDesc}"`;
-
-            if ((octopartMfr != null) || (octopartDesc != null)) {
-              spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
-                this.logAll("Item updated with Octopart data", rowIdx);
-              });
-            }
-          });
-        });
-      }
-    });
   }
 
   processBarcodeGeneric(kbeData) {
+    let prefixLocID = "LOC-";
+    let prefixPN = "IPN-";
+
     let data = kbeData[0].join("");
-    this.appendOutput("Barcode: " + data);
-
-    this.createBarcode(data);
-
-    spreadsheet.findInventoryItemByMPN(data, (res) => {
-      if (res) {
-        // Update
-        let rowIdx = res.rowIdx;
-        let item = res.item;
-
-        item.Quantity = parseInt(item.Quantity) + 1;
-
-        spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
-          this.logAll("Inventory item updated", rowIdx);
-        });
-      } else {
-        // Add
-        spreadsheet.addInventoryItem({
-          loc: '="A0"',
-          pn: `="${data}"`,
-          mpn: `="${data}"`,
-          mfr: '="Unknown"',
-          qty: 1,
-          desc: '=""'
-        }, (err, rowIdx) => {
-          this.logAll("Inventory item added", rowIdx);
-        });
+    if (data.startsWith(prefixLocID)) {
+      let locID = data.substring(prefixLocID.length);
+      if (locID.length > 0) {
+        this.Elements.locID.value = locID;
       }
-    });
+    } else if (data.startsWith(prefixPN)) {
+      this.Elements.category.value = "0";
+
+      let internalPartNumber = data.substring(prefixPN.length);
+      let pnPrefixEnd = internalPartNumber.indexOf("-");
+      if (pnPrefixEnd > 0) {
+        let pnPrefix = internalPartNumber.substring(0, pnPrefixEnd);
+        let pnSuffix = internalPartNumber.substring(pnPrefixEnd + 1);
+        if ((pnPrefix.length > 0) && (pnSuffix.length > 0)) {
+          // Valid PN's are alphanumeric only
+          if (pnSuffix.indexOf("-") < 0) {
+            this.Elements.category.value = pnPrefix;
+            this.Elements.pn.value = pnSuffix;
+          }
+        }
+      }
+    } else {
+      this.Elements.mpn.value = data;
+    }
+
+    // spreadsheet.findInventoryItemByMPN(data, (res) => {
+    //   if (res) {
+    //     // Update
+    //     let rowIdx = res.rowIdx;
+    //     let item = res.item;
+
+    //     item.Quantity = parseInt(item.Quantity) + 1;
+
+    //     spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
+    //       this.logAll("Inventory item updated", rowIdx);
+    //     });
+    //   } else {
+    //     // Add
+    //     spreadsheet.addInventoryItem({
+    //       loc: '="A0"',
+    //       pn: `="${data}"`,
+    //       mpn: `="${data}"`,
+    //       mfr: '="Unknown"',
+    //       qty: 1,
+    //       desc: '=""'
+    //     }, (err, rowIdx) => {
+    //       this.logAll("Inventory item added", rowIdx);
+    //     });
+    //   }
+    // });
   }
 
   onKeyDown(event) {
@@ -316,6 +367,7 @@ class ScanBarcodePage extends AppPage {
 
   clearFormFields() {
     this.Elements.locID.value = "";
+    this.Elements.category.value = "0";
     this.Elements.pn.value = "";
     this.Elements.mfr.value = "";
     this.Elements.mpn.value = "";
@@ -368,6 +420,66 @@ class ScanBarcodePage extends AppPage {
     let qty = qtyStr ? parseInt(qtyStr) : 0;
     let qtyAction = this.Elements.qtyAction.value;
 
+    spreadsheet.findInventoryItemByMPN(mpn, (res) => {
+      if (res) {
+        // Update
+        let rowIdx = res.rowIdx;
+        let item = res.item;
+
+        if (locID) {
+          item["Location"] = `="${locID}"`;
+        }
+
+        if (pnSuffix) {
+          item["Part Number"] = `="${pn}"`;
+        }
+
+        if (mfr) {
+          item["Manufacturer"] = `="${mfr}"`;
+        }
+
+        if (desc) {
+          item["Description"] = `="${desc}"`;
+        }
+
+        if (qtyAction === "add") {
+          item.Quantity = parseInt(item.Quantity) + qty;
+        } else {
+          item.Quantity = qty;
+        }
+
+        spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
+          this.displayInventoryItemResults("Inventory item updated", rowIdx);
+        });
+      } else {
+        // Add
+        spreadsheet.addInventoryItem({
+          loc: `="${locID}"`,
+          pn: `="${pn}"`,
+          mpn: `="${mpn}"`,
+          mfr: `="${mfr}"`,
+          qty: qty,
+          desc: `="${desc}"`
+        }, (err, rowIdx) => {
+          this.displayInventoryItemResults("Inventory item added", rowIdx);
+        });
+      }
+    });
+  }
+
+  displayInventoryItemResults(msg, rowIdx) {
+    this.logAll(msg, rowIdx);
+
+    let item = spreadsheet.getInventoryItem(rowIdx);
+
+    let locID = item["Location"];
+    let pn = item["Part Number"];
+    let mpn = item["Manufacturer Part Number"];
+    let mfr = item["Manufacturer"];
+    let qty = item["Quantity"];
+    let desc = item["Description"];
+
+    //
     this.rawBarcodeDataLocID = {
       data: "LOC-" + locID,
       text: "LOC: " + locID
@@ -377,16 +489,14 @@ class ScanBarcodePage extends AppPage {
       text: "IPN: " + pn
     };
 
-    let newItemIndex = 123;
-
     this.Elements.resultsHeaderLocID.innerHTML = `Location ID: ${locID}`;
     this.appendOutput(this.Elements.scanBarcodeResultsLocID, "Location that this item will be stored.");
 
     this.Elements.resultsHeaderPN.innerHTML = `Part Number: ${pn}`;
-    this.appendOutput(this.Elements.scanBarcodeResultsPN, `Inventory #: ${newItemIndex}`);
+    this.appendOutput(this.Elements.scanBarcodeResultsPN, `Inventory #: ${rowIdx}`);
     this.appendOutput(this.Elements.scanBarcodeResultsPN, `Mfr Part Number: ${mpn}`);
     this.appendOutput(this.Elements.scanBarcodeResultsPN, `Manufactuer: ${mfr}`);
-    this.appendOutput(this.Elements.scanBarcodeResultsPN, `Quantity: ${qtyAction} ${qty}`);
+    this.appendOutput(this.Elements.scanBarcodeResultsPN, `Quantity: ${qty}`);
     this.appendOutput(this.Elements.scanBarcodeResultsPN, `Description: ${desc}`);
 
     //
@@ -449,6 +559,7 @@ class ScanBarcodePage extends AppPage {
       this.onBtnAddClicked();
     });
 
+    this.clearFormFields();
     this.clearResults();
 
     this.Elements.btnResultsPrintLocID.addEventListener("click",  () => {

@@ -30,7 +30,9 @@ class InventoryPage extends AppPage {
 
   onDataReady() {
     super.onDataReady();
+  }
 
+  updateSpreadsheetGrid() {
     let columnDefs = [];
     for (let i=0; i<spreadsheet.invNumCols; i++) {
       let invName = spreadsheet.invHeaderIndexToName[i];
@@ -113,7 +115,7 @@ class InventoryPage extends AppPage {
       onCellValueChanged: (params) => {
         // console.log(`Column ${params.colDef.field} changed of row ${params.data.itemIndex} from ${params.oldValue} to ${params.newValue} (${params.value})`);
 
-        this.changedRow[params.colDef.field] = params.newValue.trim();
+        this.changedRow[params.colDef.field] = (typeof params.newValue === "string") ? params.newValue.trim() : params.newValue;
       },
       onRowValueChanged: (params) => {
         // console.log(`Row ${params.data.itemIndex} changed`);
@@ -170,8 +172,13 @@ class InventoryPage extends AppPage {
   onEnter() {
     super.onEnter();
 
+    if (this.gridOptions) {
+      this.gridOptions.api.destroy();
+    }
+    this.updateSpreadsheetGrid();
+
     // this.gridOptions.api.sizeColumnsToFit();
-    
+
     let allColumnIds = [];
     this.gridOptions.columnApi.getAllColumns().forEach((column) => {
       allColumnIds.push(column.colId);

@@ -444,6 +444,7 @@ class LookupPage extends AppPage {
       this.onBtnLookupClicked();
     });
 
+    this.clearFormFields();
     this.clearResults();
 
     this.Elements.results.style.display = "none";

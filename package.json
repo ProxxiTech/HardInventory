@@ -13,6 +13,8 @@
     "files": [
       "app/**/*",
       "node_modules/**/*",
+      "app.html",
+      "print_barcode.html",
       "package.json"
     ],
     "directories": {
@@ -29,6 +31,7 @@
     "test": "npm run unit && npm run e2e",
     "start": "node build/start.js",
     "build": "webpack --display-modules --output-pathinfo --debug --display-error-details --config=build/webpack.app.config.js --env=development",
+    "debug": "webpack --display-modules --output-pathinfo --debug --display-error-details --config=build/webpack.app.config.js --env=development && electron-builder",
     "release": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder"
   },
   "dependencies": {
