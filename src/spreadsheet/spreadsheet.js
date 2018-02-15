@@ -524,9 +524,9 @@ function setCategoryItemInternal(rowIdx, rowNum, item, cb) {
         catTable[rowIdx][i] = cells[i];
       }
 
-      catWorksheet.bulkUpdateCells(cells);
-
-      cb(null, rowIdx);
+      catWorksheet.bulkUpdateCells(cells, () => {
+        cb(null, rowIdx);
+      });
     });
 }
 
