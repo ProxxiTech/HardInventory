@@ -1,6 +1,9 @@
-const bwipjs = require("bwip-js");
-const Jimp = require("jimp");
-const printer = require("printer");
+import bwipjs from "bwip-js";
+import Jimp from "jimp";
+import printer from "printer";
+
+import got from "got";
+import cheerio from "cheerio";
 
 import * as spreadsheet from "../spreadsheet/spreadsheet";
 import octopartLookup from "../helpers/octopartLookup";
@@ -88,7 +91,7 @@ class ScanBarcodePage extends AppPage {
     this.Elements.mpn.value = manufacturerPartNumber;
     if (manufacturerPartNumber.length > 0) {
       // Lookup the MPN on Octopart
-      octopartLookup(manufacturerPartNumber, (err, octopartMfr, octopartDesc, octopartCat) => {
+      octopartLookup.lookupByMPN(manufacturerPartNumber, (err, octopartMPN, octopartMfr, octopartDesc, octopartCat) => {
         if (err) {
           return console.error(err);
         }

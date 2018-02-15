@@ -19,7 +19,7 @@ import "./helpers/external_links.js";
 import { remote } from "electron";
 import jetpack from "fs-jetpack";
 
-const octopartjs = require("octopartjs");
+import octopartjs from "octopartjs";
 
 import * as spreadsheet from "./spreadsheet/spreadsheet";
 

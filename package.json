@@ -30,6 +30,8 @@
     "e2e": "mocha temp/e2e.js --require source-map-support/register",
     "test": "npm run unit && npm run e2e",
     "start": "node build/start.js",
+    "babel-scratchpad": "babel src --ignore **/*.spec.js --out-dir scratchpad --source-maps inline && node scratchpad/scratchpad.js",
+    "scratchpad": "node scratchpad.js",
     "build": "webpack --display-modules --output-pathinfo --debug --display-error-details --config=build/webpack.app.config.js --env=development",
     "debug": "webpack --display-modules --output-pathinfo --debug --display-error-details --config=build/webpack.app.config.js --env=development && electron-builder",
     "release": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder"
@@ -38,8 +40,10 @@
     "ag-grid": "^16.0.1",
     "async": "^2.6.0",
     "bwip-js": "^1.6.2",
+    "cheerio": "^1.0.0-rc.2",
     "fs-jetpack": "^1.0.0",
     "google-spreadsheet": "^2.0.4",
+    "got": "^8.1.0",
     "jimp": "^0.2.28",
     "octopartjs": "^1.0.5",
     "printer": "^0.2.2",
@@ -49,6 +53,7 @@
     "xel": "0.0.115"
   },
   "devDependencies": {
+    "@babel/cli": "^7.0.0-beta.38",
     "@babel/core": "^7.0.0-beta.38",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.38",
     "@babel/preset-env": "^7.0.0-beta.38",

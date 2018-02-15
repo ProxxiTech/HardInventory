@@ -1,4 +1,4 @@
-const octopartjs = require("octopartjs");
+import octopartjs from "octopartjs";
 
 import * as spreadsheet from "../spreadsheet/spreadsheet";
 
@@ -51,22 +51,18 @@ function findCategory(cat) {
   return null;
 }
 
-export default (mpn, cb) => {
-  var queries = [
-    {"mpn": mpn, "reference": "line1"}
-  ];
-
+function performLookup(queries, cb) {
   var args = {
     queries: JSON.stringify(queries),
-    // "include[]": "[descriptions,category_uids]",
     "include[0]": "descriptions",
     "include[1]": "category_uids",
   };
 
   octopartjs.parts.match(args, (err, body) => {
     if (err)
-      return cb(err, null);
+      return cb(err);
 
+    let mpn;
     let mfr;
     let desc;
     let cat;
@@ -76,6 +72,7 @@ export default (mpn, cb) => {
       if (body.results[0].items.length > 0) {
         let item = body.results[0].items[0];
 
+        mpn = item.mpn;
         mfr = item.manufacturer.name;
 
         // console.log(JSON.stringify(item.descriptions, null, 4));
@@ -102,7 +99,7 @@ export default (mpn, cb) => {
         octopartjs.categories.get_multi(uids, (err, results) => {
           if (err) {
             // Call the CB anyway, as categories aren't that important and maybe Octopart is missing some data?
-            cb(null, mfr, desc, cat);
+            cb(null, mpn, mfr, desc, cat);
 
             return console.error(err);
           }
@@ -137,9 +134,25 @@ export default (mpn, cb) => {
           }
 
           //
-          cb(null, mfr, desc, cat);
+          cb(null, mpn, mfr, desc, cat);
         });
       }
     }
   });
-};
+}
+
+export function lookupByMPN(mpn, cb) {
+  var queries = [
+    {"mpn": mpn, "reference": "line1"}
+  ];
+
+  performLookup(queries, cb);
+}
+
+export function lookupByDigiKeyPN(pn, cb) {
+  var queries = [
+    {"sku": pn, "seller": "Digi-Key", "reference": "line1"}
+  ];
+
+  performLookup(queries, cb);
+}

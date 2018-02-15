@@ -3,9 +3,9 @@
 // import path from "path";
 // import url from "url";
 
-const bwipjs = require("bwip-js");
-const Jimp = require("jimp");
-const printer = require("printer");
+import bwipjs from "bwip-js";
+import Jimp from "jimp";
+import printer from "printer";
 
 import * as spreadsheet from "../spreadsheet/spreadsheet";
 

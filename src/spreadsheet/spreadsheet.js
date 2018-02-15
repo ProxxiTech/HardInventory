@@ -1,7 +1,7 @@
 // import { remote } from "electron";
 // import jetpack from "fs-jetpack";
-let GoogleSpreadsheet = require("google-spreadsheet");
-let async = require("async");
+import GoogleSpreadsheet from "google-spreadsheet";
+import async from "async";
 
 function logAll(title, o) {
   console.log(title);
@@ -407,11 +407,21 @@ export function getInventoryItem(rowIdx) {
   let row = invTable[rowIdx];
 
   let item = {};
-  for (let cell of row) {
-    let colIdx = cell.col - 1;
-    let colName = invHeaderIndexToName[colIdx];
 
-    item[colName] = cell.value;
+  // Fill in default values incase some cells are empty and thus missing/not included
+  for (let i=0; i<invNumCols; i++) {
+    item[invHeaderIndexToName[i]] = null;
+  }
+
+  if (row) {
+    for (let cell of row) {
+      if (cell) {
+        let colIdx = cell.col - 1;
+        let colName = invHeaderIndexToName[colIdx];
+
+        item[colName] = cell.value;
+      }
+    }
   }
 
   return item;
