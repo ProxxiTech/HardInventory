@@ -356,10 +356,10 @@ export function findInventoryItemByMPN(mpn, cb) {
   findInventoryItemInternal(mpnColIdx, mpn, cb);
 }
 
-export function findInventoryItemByPN(pn, cb) {
+export function findInventoryItemsByPN(pn, cb) {
   let pnColIdx = invHeaderNameToIndex["pn"];
 
-  findInventoryItemInternal(pnColIdx, pn, cb);
+  findInventoryItemsInternal(pnColIdx, pn, cb);
 }
 
 export function findInventoryItemsByLocation(loc, cb) {
@@ -425,6 +425,33 @@ export function getInventoryItem(rowIdx) {
   }
 
   return item;
+}
+
+function findCategoryItemInternal(findColIdx, value) {
+  for (let rowIdx=0; rowIdx<catTable.length; rowIdx++) {
+    let row = catTable[rowIdx];
+    let itemValue = row[findColIdx].value;
+
+    if (itemValue.toLowerCase() === value.toLowerCase()) {
+      let item = {};
+      for (let cell of row) {
+        let colIdx = cell.col - 1;
+        let colName = catHeaderIndexToName[colIdx];
+
+        item[colName] = cell.value;
+      }
+
+      return { rowIdx, item };
+    }
+  }
+
+  return null;
+}
+
+export function findCategoryItem(cat) {
+  let colIdx = catHeaderNameToIndex["Category"];
+
+  return findCategoryItemInternal(colIdx, cat);
 }
 
 export function getCategoryItemCount() {

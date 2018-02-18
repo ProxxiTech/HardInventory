@@ -10,8 +10,8 @@ class CategoriesPage extends AppPage {
     super(data);
   }
 
-  onInitialize() {
-    super.onInitialize();
+  onInitialize(appState) {
+    super.onInitialize(appState);
 
     this.nextRowID = 1001;
     this.changedRow = {};
@@ -235,7 +235,7 @@ class CategoriesPage extends AppPage {
                 };
 
                 rowData.push(newItem);
-  
+
                 let transaction = {
                   add: [newItem]
                 };

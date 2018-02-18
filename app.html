@@ -37,12 +37,18 @@
           </x-box>
         </x-button>
         <x-button skin="nav" id="app-nav" nav-target="info">
-            <x-box>
-              <x-icon name='info-outline'></x-icon>
-              <x-label>Information</x-label>
-            </x-box>
-          </x-button>
-        </x-box>
+          <x-box>
+            <x-icon name='info-outline'></x-icon>
+            <x-label>Information</x-label>
+          </x-box>
+        </x-button>
+        <x-button skin="nav" id="app-nav" nav-target="scratchpad" show-env="development" style="display: none;">
+          <x-box>
+            <x-icon name='new-releases'></x-icon>
+            <x-label>Scratchpad</x-label>
+          </x-box>
+        </x-button>
+      </x-box>
     </x-buttons>
   </x-box>
   <x-box id="views" vertical>
@@ -55,11 +61,14 @@
         <div class="formgrid fg1w-wide">
           <x-select id="lookup-type" class="fgR1 fgC1">
             <x-menu id="lookup-typeMenu">
-              <x-menuitem id="lookup-typeLocID" value='locid' toggled>
-                <x-label>Location ID</x-label>
+              <x-menuitem id="lookup-typeMPN" value='mpn' toggled>
+                <x-label>Manufacturer P/N</x-label>
               </x-menuitem>
               <x-menuitem id="lookup-typePN" value='pn'>
                 <x-label>Internal P/N</x-label>
+              </x-menuitem>
+              <x-menuitem id="lookup-typeLocID" value='locid'>
+                <x-label>Location ID</x-label>
               </x-menuitem>
             </x-menu>
           </x-select>
@@ -238,6 +247,30 @@
       <p>
         App author: <strong id="info-author"></strong>
       </p>
+    </x-box>
+    <x-box vertical id="scratchpad-page" class="container" style="display: none;">
+      <x-box vertical>
+        <x-button id="scratchpad-btnDataMatrix">
+          <x-label>Data Matrix</x-label>
+        </x-button>
+        <x-button id="scratchpad-btnPDF417">
+          <x-label>PDF417</x-label>
+        </x-button>
+        <x-button id="scratchpad-btn1D">
+          <x-label>1D</x-label>
+        </x-button>
+        <x-box vertical>
+          <div>
+            <x-input id="scratchpad-category" readonly></x-input>-<x-input id="scratchpad-pn" readonly></x-input>
+          </div>
+          <div>
+            <x-input id="scratchpad-mpn" readonly></x-input>
+          </div>
+          <div>
+            <x-input id="scratchpad-qty" readonly></x-input>
+          </div>
+        </x-box>
+      </x-box>
     </x-box>
   </x-box>
 

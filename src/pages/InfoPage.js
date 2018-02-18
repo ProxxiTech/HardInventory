@@ -13,8 +13,8 @@ class InfoPage extends AppPage {
     this.spreadsheetURL = data.spreadsheetURL;
   }
 
-  onInitialize() {
-    super.onInitialize();
+  onInitialize(appState) {
+    super.onInitialize(appState);
 
     const app = remote.app;
     const appRootDir = jetpack.cwd(app.getAppPath());

@@ -2,11 +2,9 @@ import bwipjs from "bwip-js";
 import Jimp from "jimp";
 import printer from "printer";
 
-import got from "got";
-import cheerio from "cheerio";
+import barcodeScanner from "../helpers/barcodeScanner";
 
 import * as spreadsheet from "../spreadsheet/spreadsheet";
-import octopartLookup from "../helpers/octopartLookup";
 
 import AppPage from "./AppPage";
 
@@ -52,234 +50,42 @@ class ScanBarcodePage extends AppPage {
     });
   }
 
-  isBarcodeDataMatrix(kbeData) {
-    if (kbeData.length > 8) {
-      let h = kbeData[0].join("");
-      if (h == "[)>*F9*06") {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  processBarcodeDataMatrix(kbeData) {
-    let validPN = false;
+  onScanBarcodeCompleted({ internalPN, /*isNewInternalPN,*/ supplierPN, locationID, manufacturerPN, manufacturer, category, description, quantity }) {
     this.Elements.category.value = "0";
 
-    // P<internalPartNumber>
-    let internalPartNumber = kbeData[1].join("");
-    internalPartNumber = internalPartNumber.substring(internalPartNumber.indexOf("P") + 1);
-    let pnPrefixEnd = internalPartNumber.indexOf("-");
-    if (pnPrefixEnd > 0) {
-      let pnPrefix = internalPartNumber.substring(0, pnPrefixEnd);
-      let pnSuffix = internalPartNumber.substring(pnPrefixEnd + 1);
-      if ((pnPrefix.length > 0) && (pnSuffix.length > 0)) {
-        // Valid PN's are alphanumeric only
-        if (pnSuffix.indexOf("-") < 0) {
-          this.Elements.category.value = pnPrefix;
-          this.Elements.pn.value = pnSuffix;
+    if (internalPN) {
+      // No need to validate; internalPN is only set if it's valid
+      let pnPrefixEnd = internalPN.indexOf("-");
+      let pnPrefix = internalPN.substring(0, pnPrefixEnd);
+      let pnSuffix = internalPN.substring(pnPrefixEnd + 1);
 
-          validPN = true;
-        }
-      }
+      this.Elements.category.value = pnPrefix;
+      this.Elements.pn.value = pnSuffix;
+    } else if (category) {
+      this.Elements.category.value = category;
     }
 
-    // 1P<manufacturerPartNumber>
-    let manufacturerPartNumber = kbeData[2].join("");
-    manufacturerPartNumber = manufacturerPartNumber.substring(manufacturerPartNumber.indexOf("P") + 1);
-    this.Elements.mpn.value = manufacturerPartNumber;
-    if (manufacturerPartNumber.length > 0) {
-      // Lookup the MPN on Octopart
-      octopartLookup.lookupByMPN(manufacturerPartNumber, (err, octopartMPN, octopartMfr, octopartDesc, octopartCat) => {
-        if (err) {
-          return console.error(err);
-        }
-
-        if (octopartMfr)
-          this.Elements.mfr.value = octopartMfr;
-        if (octopartDesc)
-          this.Elements.desc.value = octopartDesc;
-
-        if (!validPN) {
-          if (octopartCat) {
-            this.Elements.category.value = octopartCat;
-          }
-
-          spreadsheet.findInventoryItemByMPN(manufacturerPartNumber, (invResults) => {
-            if (invResults) {
-              let invItem = invResults.item;
-              let ipn = invItem["Part Number"];
-
-              let pnPrefixEnd = ipn.indexOf("-");
-              if (pnPrefixEnd > 0) {
-                let pnPrefix = ipn.substring(0, pnPrefixEnd);
-                let pnSuffix = ipn.substring(pnPrefixEnd + 1);
-                if ((pnPrefix.length > 0) && (pnSuffix.length > 0)) {
-                  // Valid PN's are alphanumeric only
-                  if (pnSuffix.indexOf("-") < 0) {
-                    this.Elements.category.value = pnPrefix;
-                    this.Elements.pn.value = pnSuffix;
-
-                    validPN = true;
-                  }
-                }
-              }
-            }
-
-            if (!validPN && octopartCat) {
-              // Generate a new IPN as CAT-(catMaxIPN+1)
-              spreadsheet.findInventoryItemsByCategory(octopartCat, (results) => {
-                let highestPN = 0;
-
-                if (results) {
-                  for (let invItem of results) {
-                    let ipn = invItem.item["Part Number"];
-
-                    if (ipn) {
-                      let pnPrefixEnd = ipn.indexOf("-");
-                      if (pnPrefixEnd > 0) {
-                        let pnSuffix = ipn.substring(pnPrefixEnd + 1);
-                        if (pnSuffix.length > 0) {
-                          let pn = parseInt(pnSuffix, 10);
-                          if (pn > highestPN) {
-                            highestPN = pn;
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-
-                this.Elements.pn.value = `${highestPN+1}`.padStart(4, "0");
-              });
-            }
-          });
-        }
-      });
+    if (locationID) {
+      this.Elements.locID.value = locationID;
     }
 
-    // Q<quantity>
-    let quantityStr = kbeData[8].join("");
-    quantityStr = quantityStr.substring(quantityStr.indexOf("Q") + 1);
-    let quantity = quantityStr ? parseInt(quantityStr) : 0;
-    this.Elements.qty.value = quantity.toString();
-
-    //   for (let i=3; i<kbeData.length; i++) {
-    //     appendOutput(kbeData[i].join(''));
-    //   }
-  }
-
-  processBarcodeGeneric(kbeData) {
-    let prefixLocID = "LOC-";
-    let prefixPN = "IPN-";
-
-    let data = kbeData[0].join("");
-    if (data.startsWith(prefixLocID)) {
-      let locID = data.substring(prefixLocID.length);
-      if (locID.length > 0) {
-        this.Elements.locID.value = locID;
-      }
-    } else if (data.startsWith(prefixPN)) {
-      this.Elements.category.value = "0";
-
-      let internalPartNumber = data.substring(prefixPN.length);
-      let pnPrefixEnd = internalPartNumber.indexOf("-");
-      if (pnPrefixEnd > 0) {
-        let pnPrefix = internalPartNumber.substring(0, pnPrefixEnd);
-        let pnSuffix = internalPartNumber.substring(pnPrefixEnd + 1);
-        if ((pnPrefix.length > 0) && (pnSuffix.length > 0)) {
-          // Valid PN's are alphanumeric only
-          if (pnSuffix.indexOf("-") < 0) {
-            this.Elements.category.value = pnPrefix;
-            this.Elements.pn.value = pnSuffix;
-          }
-        }
-      }
-    } else {
-      this.Elements.mpn.value = data;
+    if (manufacturerPN) {
+      this.Elements.mpn.value = manufacturerPN;
+    } else if (supplierPN) {
+      this.Elements.mpn.value = supplierPN;
     }
 
-    // spreadsheet.findInventoryItemByMPN(data, (res) => {
-    //   if (res) {
-    //     // Update
-    //     let rowIdx = res.rowIdx;
-    //     let item = res.item;
-
-    //     item.Quantity = parseInt(item.Quantity) + 1;
-
-    //     spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
-    //       this.logAll("Inventory item updated", rowIdx);
-    //     });
-    //   } else {
-    //     // Add
-    //     spreadsheet.addInventoryItem({
-    //       loc: '="A0"',
-    //       pn: `="${data}"`,
-    //       mpn: `="${data}"`,
-    //       mfr: '="Unknown"',
-    //       qty: 1,
-    //       desc: '=""'
-    //     }, (err, rowIdx) => {
-    //       this.logAll("Inventory item added", rowIdx);
-    //     });
-    //   }
-    // });
-  }
-
-  onKeyDown(event) {
-    if (event.preventDefaulted) {
-      return; // Do nothing if event already handled
-    }
-    if (!this.isActive) {
-      return;
+    if (manufacturer) {
+      this.Elements.mfr.value = manufacturer;
     }
 
-    if (event.key == "Clear") {
-      this.kbeData = [];
-      this.kbeBlock = [];
-      this.isCapturingBarcode = true;
-
-      // Show spinner
-      this.displayLoadingScreen(true);
-    } else {
-      if (!this.isCapturingBarcode) {
-        return;
-      }
-
-      if (event.key == "Enter") {
-        if (this.kbeBlock.length > 0) {
-          this.kbeData.push(this.kbeBlock);
-        }
-
-        if (this.isBarcodeDataMatrix(this.kbeData)) {
-          // Valid Data Matrix barcode
-          this.processBarcodeDataMatrix(this.kbeData);
-        } else {
-          this.processBarcodeGeneric(this.kbeData);
-        }
-        this.kbeData = [];
-        this.kbeBlock = [];
-        this.isCapturingBarcode = false;
-
-        // Hide spinner
-        this.displayLoadingScreen(false);
-      } else if (event.key == "Shift") {
-        // Ignored
-      } else {
-        if (event.key == "F8") {
-          this.kbeData.push(this.kbeBlock);
-          this.kbeBlock = [];
-        } else if (event.key == "F9") {
-          this.kbeBlock.push("*" + event.key + "*");
-        } else {
-          this.kbeBlock.push(event.key);
-        }
-      }
+    if (description) {
+      this.Elements.desc.value = description;
     }
 
-    // Consume the event so it doesn't get handled twice
-    event.preventDefault();
+    if ((quantity !== undefined) && (quantity !== null)) {
+      this.Elements.qty.value = quantity;
+    }
   }
 
   _getDefaultPrinterName() {
@@ -420,7 +226,7 @@ class ScanBarcodePage extends AppPage {
     let mpn = this.Elements.mpn.value.trim().toUpperCase();
     let desc = this.Elements.desc.value.trim();
     let qtyStr = this.Elements.qty.value.trim();
-    let qty = qtyStr ? parseInt(qtyStr) : 0;
+    let qty = qtyStr ? parseInt(qtyStr, 10) : 0;
     let qtyAction = this.Elements.qtyAction.value;
 
     spreadsheet.findInventoryItemByMPN(mpn, (res) => {
@@ -446,9 +252,9 @@ class ScanBarcodePage extends AppPage {
         }
 
         if (qtyAction === "add") {
-          item.Quantity = parseInt(item.Quantity) + qty;
+          item["Quantity"] = parseInt(item["Quantity"], 10) + qty;
         } else {
-          item.Quantity = qty;
+          item["Quantity"] = qty;
         }
 
         spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
@@ -479,7 +285,7 @@ class ScanBarcodePage extends AppPage {
     let pn = item["Part Number"];
     let mpn = item["Manufacturer Part Number"];
     let mfr = item["Manufacturer"];
-    let qty = item["Quantity"];
+    let qty = parseInt(item["Quantity"], 10);
     let desc = item["Description"];
 
     //
@@ -524,8 +330,8 @@ class ScanBarcodePage extends AppPage {
     this.showPage();
   }
 
-  onInitialize() {
-    super.onInitialize();
+  onInitialize(appState) {
+    super.onInitialize(appState);
 
     this.Elements = {};
     let elementNames = [
@@ -575,11 +381,6 @@ class ScanBarcodePage extends AppPage {
     this.Elements.btnResultsBack.addEventListener("click",  () => {
       this.onBtnResultsBackClicked();
     });
-
-    //
-    window.addEventListener("keydown", (event) => {
-      this.onKeyDown(event);
-    }, true);
   }
 
   onDataReady() {
@@ -620,10 +421,16 @@ class ScanBarcodePage extends AppPage {
     super.onEnter();
 
     this.updateCategoryMenu();
+
+    this.onCaptureEndHandle = barcodeScanner.addListener("onCaptureEnd", (barcodeData) => {
+      this.onScanBarcodeCompleted(barcodeData);
+    });
   }
 
   onExit() {
     super.onExit();
+
+    barcodeScanner.removeListener("onCaptureEnd", this.onCaptureEndHandle);
 
     this.clearResults();
   }

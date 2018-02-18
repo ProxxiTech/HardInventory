@@ -25,16 +25,12 @@ class AppPage {
   }
 
   displayLoadingScreen(isLoading) {
-    if (isLoading) {
-      this.hidePage();
-      document.querySelector("#loading").style.display = "flex";
-    } else {
-      document.querySelector("#loading").style.display = "none";
-      this.showPage();
-    }
+    this.appState.displayLoadingScreen(isLoading);
   }
 
-  onInitialize() {
+  onInitialize(appState) {
+    this.appState = appState;
+
     this.hidePage();
   }
 
@@ -44,14 +40,10 @@ class AppPage {
 
   onEnter() {
     this.isActive = true;
-
-    this.showPage();
   }
 
   onExit() {
     this.isActive = false;
-
-    this.hidePage();
   }
 }
 

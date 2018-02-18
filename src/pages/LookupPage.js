@@ -7,6 +7,8 @@ import bwipjs from "bwip-js";
 import Jimp from "jimp";
 import printer from "printer";
 
+import barcodeScanner from "../helpers/barcodeScanner";
+
 import * as spreadsheet from "../spreadsheet/spreadsheet";
 
 import AppPage from "./AppPage";
@@ -21,95 +23,27 @@ class LookupPage extends AppPage {
     this.isCapturingBarcode = false;
   }
 
-  isBarcodeDataMatrix(kbeData) {
-    if (kbeData.length > 8) {
-      let h = kbeData[0].join("");
-      if (h == "[)>*F9*06") {
-        return true;
-      }
+  onScanBarcodeCompleted({ internalPN, locationID, manufacturerPN }) {
+    if (manufacturerPN) {
+      this.Elements.type.value = this.Elements.typeMPN.value;
+      this.Elements.type._updateButton();
+
+      this.Elements.value.value = manufacturerPN;
+    } else if (internalPN) {
+      this.Elements.type.value = this.Elements.typePN.value;
+      this.Elements.type._updateButton();
+
+      this.Elements.value.value = internalPN;
+    } else if (locationID) {
+      this.Elements.type.value = this.Elements.typeLocID.value;
+      this.Elements.type._updateButton();
+
+      this.Elements.value.value = locationID;
     }
-
-    return false;
-  }
-
-  processBarcodeGeneric(kbeData) {
-    let prefixLocID = "LOC-";
-    let prefixPN = "IPN-";
-
-    let data = kbeData[0].join("");
-    if (data.startsWith(prefixLocID)) {
-      let locID = data.substring(prefixLocID.length);
-      if (locID.length > 0) {
-        this.Elements.type.value = this.Elements.typeLocID.value;
-        this.Elements.type._updateButton();
-
-        this.Elements.value.value = locID;
-      }
-    } else if (data.startsWith(prefixPN)) {
-      let pn = data.substring(prefixPN.length);
-      if (pn.length > 0) {
-        this.Elements.type.value = this.Elements.typePN.value;
-        this.Elements.type._updateButton();
-
-        this.Elements.value.value = pn;
-      }
-    }
-  }
-
-  onKeyDown(event) {
-    if (event.preventDefaulted) {
-      return; // Do nothing if event already handled
-    }
-    if (!this.isActive) {
-      return;
-    }
-
-    if (event.key == "Clear") {
-      this.kbeData = [];
-      this.kbeBlock = [];
-      this.isCapturingBarcode = true;
-
-      // Show spinner
-      this.displayLoadingScreen(true);
-    } else {
-      if (!this.isCapturingBarcode) {
-        return;
-      }
-
-      if (event.key == "Enter") {
-        if (this.kbeBlock.length > 0) {
-          this.kbeData.push(this.kbeBlock);
-        }
-
-        if (!this.isBarcodeDataMatrix(this.kbeData)) {
-          this.processBarcodeGeneric(this.kbeData);
-        }
-        this.kbeData = [];
-        this.kbeBlock = [];
-        this.isCapturingBarcode = false;
-
-        // Hide spinner
-        this.displayLoadingScreen(false);
-      } else if (event.key == "Shift") {
-        // Ignored
-      } else {
-        if (event.key == "F8") {
-          this.kbeData.push(this.kbeBlock);
-          this.kbeBlock = [];
-        } else if (event.key == "F9") {
-          this.kbeBlock.push("*" + event.key + "*");
-        } else {
-          this.kbeBlock.push(event.key);
-        }
-      }
-    }
-
-    // Consume the event so it doesn't get handled twice
-    event.preventDefault();
   }
 
   clearFormFields() {
-    this.Elements.type.value = this.Elements.typeLocID.value;
+    this.Elements.type.value = this.Elements.typeMPN.value;
     this.Elements.type._updateButton();
 
     this.Elements.value.value = "";
@@ -203,39 +137,16 @@ class LookupPage extends AppPage {
     }
     val = val.toUpperCase();
 
-    let isLocID = this.Elements.typeLocID.toggled;
+    let isMPN = this.Elements.typeMPN.toggled;
+    let isIPN = this.Elements.typePN.toggled;
+    // let isLocID = this.Elements.typeLocID.toggled;
 
     this.clearResults();
 
-    if (isLocID) {
-      spreadsheet.findInventoryItemsByLocation(val, (results) => {
-        if (results != null) {
-          this.rawBarcodeDataLocID = {
-            data: "LOC-" + val,
-            text: "LOC: " + val
-          };
-
-          this.setOutputHeaderLocID(`Location ID: ${val}`);
-          this.appendOutputLocID(`Number of Items: ${results.length}`);
-
-          for (let i=0; i<results.length; i++) {
-            let result = results[i];
-
-            this.appendLookupResultsPN(result, i);
-          }
-
-          this.hidePage();
-          this.Elements.results.style.display = "flex";
-        }
-      });
-    } else {
-      spreadsheet.findInventoryItemByPN(val, (result) => {
+    if (isMPN) {
+      // Manufacturer P/N
+      spreadsheet.findInventoryItemByMPN(val, (result) => {
         if (result != null) {
-          this.rawBarcodeDataPN = {
-            data: "IPN-" + val,
-            text: "IPN: " + val
-          };
-
           let item = result.item;
 
           let locID = item["Location"];
@@ -251,7 +162,66 @@ class LookupPage extends AppPage {
             }
           });
 
+          let internalPN = item["Part Number"];
+          this.rawBarcodeDataPN = {
+            data: "IPN-" + internalPN,
+            text: "IPN: " + internalPN
+          };
+
           this.appendLookupResultsPN(result, 0);
+
+          this.hidePage();
+          this.Elements.results.style.display = "flex";
+        }
+      });
+    } else if (isIPN) {
+      // Internal P/N
+      spreadsheet.findInventoryItemsByPN(val, (results) => {
+        if (results != null) {
+          let firstItem = results[0].item;
+
+          let locID = firstItem["Location"];
+          this.setOutputHeaderLocID(`Location ID: ${locID}`);
+          this.rawBarcodeDataLocID = {
+            data: "LOC-" + locID,
+            text: "LOC: " + locID
+          };
+
+          spreadsheet.findInventoryItemsByLocation(locID, (results) => {
+            if (results != null) {
+              this.appendOutputLocID(`Number of Items: ${results.length}`);
+            }
+          });
+
+          for (let i=0; i<results.length; i++) {
+            let result = results[i];
+
+            this.appendLookupResultsPN(result, i);
+          }
+
+          this.hidePage();
+          this.Elements.results.style.display = "flex";
+        }
+      });
+    } else {
+      // Location ID
+      spreadsheet.findInventoryItemsByLocation(val, (results) => {
+        if (results != null) {
+          let firstItem = results.item[0];
+
+          let locID = firstItem["Location"];
+          this.setOutputHeaderLocID(`Location ID: ${locID}`);
+          this.appendOutputLocID(`Number of Items: ${results.length}`);
+          this.rawBarcodeDataLocID = {
+            data: "LOC-" + locID,
+            text: "LOC: " + locID
+          };
+
+          for (let i=0; i<results.length; i++) {
+            let result = results[i];
+
+            this.appendLookupResultsPN(result, i);
+          }
 
           this.hidePage();
           this.Elements.results.style.display = "flex";
@@ -413,15 +383,16 @@ class LookupPage extends AppPage {
     this.showPage();
   }
 
-  onInitialize() {
-    super.onInitialize();
+  onInitialize(appState) {
+    super.onInitialize(appState);
 
     this.Elements = {};
     let elementNames = [
       "type",
       "typeMenu",
-      "typeLocID",
+      "typeMPN",
       "typePN",
+      "typeLocID",
       "value",
       "btnClear",
       "btnLookup",
@@ -454,19 +425,20 @@ class LookupPage extends AppPage {
     this.Elements.btnResultsBack.addEventListener("click",  () => {
       this.onBtnResultsBackClicked();
     });
-
-    this.Elements.type.value = this.Elements.typeLocID.value;
-    this.Elements.type._updateButton();
-
-    //
-    window.addEventListener("keydown", (event) => {
-      this.onKeyDown(event);
-    }, true);
   }
 
-  onEnter() { super.onEnter(); }
+  onEnter() {
+    super.onEnter();
+
+    this.onCaptureEndHandle = barcodeScanner.addListener("onCaptureEnd", (barcodeData) => {
+      this.onScanBarcodeCompleted(barcodeData);
+    });
+  }
+
   onExit() {
     super.onExit();
+
+    barcodeScanner.removeListener("onCaptureEnd", this.onCaptureEndHandle);
 
     this.clearResults();
   }
