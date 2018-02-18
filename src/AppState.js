@@ -1,7 +1,12 @@
 import * as assert from "assert";
 
-class AppState {
+import EventEmitter from "./helpers/EventEmitter";
+
+
+class AppState extends EventEmitter {
   constructor() {
+    super();
+
     this.activePage = null;
 
     this.loadingScreenCounter = 0;
@@ -51,6 +56,8 @@ class AppState {
   }
 
   displayLoadingScreen(isLoading) {
+    let previouslyLoading = this.loadingScreenCounter > 0;
+
     this.loadingScreenCounter += (isLoading) ? 1 : -1;
     assert.ok(this.loadingScreenCounter >= 0, "Too many calls to hide the loading screen without it being shown first.");
 
@@ -66,6 +73,10 @@ class AppState {
       if (this.activePage) {
         this.activePage.showPage();
       }
+    }
+
+    if (currentlyLoading != previouslyLoading) {
+      this.emit("onLoadingScreenShow", currentlyLoading);
     }
   }
 }
