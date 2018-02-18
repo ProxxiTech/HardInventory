@@ -26,19 +26,27 @@ class LookupPage extends AppPage {
   onScanBarcodeCompleted({ internalPN, locationID, manufacturerPN }) {
     if (manufacturerPN) {
       this.Elements.type.value = this.Elements.typeMPN.value;
-      this.Elements.type._updateButton();
-
       this.Elements.value.value = manufacturerPN;
     } else if (internalPN) {
       this.Elements.type.value = this.Elements.typePN.value;
-      this.Elements.type._updateButton();
-
       this.Elements.value.value = internalPN;
     } else if (locationID) {
       this.Elements.type.value = this.Elements.typeLocID.value;
-      this.Elements.type._updateButton();
-
       this.Elements.value.value = locationID;
+    }
+
+    this.Elements.type._updateButton();
+    this.updateValueHint();
+  }
+
+  updateValueHint() {
+    let val = this.Elements.type.value;
+    if (val === this.Elements.typeMPN.value) {
+      this.Elements.valueHint.innerHTML = "manufacturer p/n";
+    } else if (val === this.Elements.typePN.value) {
+      this.Elements.valueHint.innerHTML = "12-3456";
+    } else if (val === this.Elements.typeLocID.value) {
+      this.Elements.valueHint.innerHTML = "U1S1P1";
     }
   }
 
@@ -47,6 +55,7 @@ class LookupPage extends AppPage {
     this.Elements.type._updateButton();
 
     this.Elements.value.value = "";
+    this.updateValueHint();
   }
 
   onBtnClearClicked() {
@@ -394,6 +403,7 @@ class LookupPage extends AppPage {
       "typePN",
       "typeLocID",
       "value",
+      "valueHint",
       "btnClear",
       "btnLookup",
       "results",
@@ -407,6 +417,10 @@ class LookupPage extends AppPage {
     for (let name of elementNames) {
       this.Elements[name] = document.querySelector(`#${this.pageName}-${name}`);
     }
+
+    this.Elements.type.addEventListener("change", (e) => {
+      this.updateValueHint();
+    });
 
     this.Elements.btnClear.addEventListener("click",  () => {
       this.onBtnClearClicked();

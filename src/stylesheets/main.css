@@ -51,7 +51,7 @@ a {
 
 #views #loading {
   display: flex;
-  align-items: center; 
+  align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
@@ -82,6 +82,10 @@ a {
 
 .formgrid.fg1w-wide {
   grid-template-columns: [l1-start] 125px [l1-end i1-start] auto [i1-end];
+}
+
+.formgrid.fg1w-xwide {
+  grid-template-columns: [l1-start] 175px [l1-end i1-start] auto [i1-end];
 }
 
 .formgrid.fg2w {
