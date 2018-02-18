@@ -21,16 +21,6 @@ class BarcodeScanner extends EventEmitter {
     }, true);
   }
 
-  isExtendedBarcode(kbeData) {
-    if (kbeData.length > 8) {
-      if (kbeData[0] === "[)>*F9*06") {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   findExtendedBarcodeBlock(kbeData, blockPrefix) {
     for (let block of kbeData) {
       let idx = block.indexOf(blockPrefix);
@@ -188,7 +178,7 @@ class BarcodeScanner extends EventEmitter {
     });
   }
 
-  processExtendedBarcode(kbeData, cb) {
+  processDigiKeyExtendedBarcode(kbeData, cb) {
     // Block prefixes for Digi-Key:
     // P		Customer Part Number
     // 1P		Vendor Part Number
@@ -205,6 +195,25 @@ class BarcodeScanner extends EventEmitter {
     let pnResults = this.parsePartNumber(partNumber);
     let quantity = quantityStr ? parseInt(quantityStr, 10) : 0;
     this.parseManufacturerPartNumber(manufacturerPartNumber, pnResults, (mpnResults) => {
+      cb({
+        ...mpnResults,  // includes pnResults, possibly modified
+        quantity
+      });
+    });
+  }
+
+  processMouserExtendedBarcode(kbeData, cb) {
+    // Block prefixes for Digi-Key:
+    // 1P		Vendor Part Number (or Customer Part Number, ugh)
+    // Q		Quantity
+    // 4L		Country of origin
+
+    let manufacturerPartNumber = this.findExtendedBarcodeBlock(kbeData, "1P");
+    let quantityStr = this.findExtendedBarcodeBlock(kbeData, "Q");
+
+    //
+    let quantity = quantityStr ? parseInt(quantityStr, 10) : 0;
+    this.parseManufacturerPartNumber(manufacturerPartNumber, null, (mpnResults) => {
       cb({
         ...mpnResults,  // includes pnResults, possibly modified
         quantity
@@ -278,10 +287,33 @@ class BarcodeScanner extends EventEmitter {
     });
   }
 
+  isDigiKeyExtendedBarcode(kbeData) {
+    if (kbeData.length > 8) {
+      if (kbeData[0] === "[)>*F9*06") {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  isMouserExtendedBarcode(kbeData) {
+    if (kbeData.length > 6) {
+      if (kbeData[0] === ">[)>06") {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   processBarcode(cb) {
-    if (this.isExtendedBarcode(this.kbeData)) {
+    if (this.isDigiKeyExtendedBarcode(this.kbeData)) {
       // Valid Data Matrix or PDF417 barcode
-      this.processExtendedBarcode(this.kbeData, cb);
+      this.processDigiKeyExtendedBarcode(this.kbeData, cb);
+    } else if (this.isMouserExtendedBarcode(this.kbeData)) {
+      // Valid Data Matrix barcode
+      this.processMouserExtendedBarcode(this.kbeData, cb);
     } else {
       // Probably either a 1D or QR barcode
       this.processSimpleBarcode(this.kbeData, cb);
