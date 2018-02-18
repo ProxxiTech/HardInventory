@@ -1,5 +1,5 @@
-// import got from "got";
-// import cheerio from "cheerio";
+import got from "got";
+import cheerio from "cheerio";
 
 import * as spreadsheet from "../spreadsheet/spreadsheet";
 import * as octopartLookup from "./octopartLookup";
@@ -235,10 +235,11 @@ class BarcodeScanner extends EventEmitter {
       let dkPartID = data.substring(0, 7);
       let orderQty = parseInt(data.substring(7, 16), 10);
 
-      // Nothing can be done about DK PartID's for now, so pretend it's a MPN "just because"
-      cb({
-        manufacturerPN: dkPartID,
-        quantity: orderQty
+      this.lookupDigiKeyPartID(dkPartID, (dkResults) => {
+        cb({
+          ...dkResults,
+          quantity: orderQty
+        });
       });
     } else {
       // Unknown barcode, assume it's a MPN
@@ -255,85 +256,27 @@ class BarcodeScanner extends EventEmitter {
     }
   }
 
-  // lookupDigiKeyPartID(dkPartID) {
-  //   got(`http://www.digikey.com/classic/ordering/leadtime.aspx?partid=${dkPartID}`).then(response => {
-  //     const $ = cheerio.load(response.body);
-  //     let dkPartNumber = $("#ctl00_ctl00_mainContentPlaceHolder_mainContentPlaceHolder_lblPartNumberValue").html();
+  lookupDigiKeyPartID(dkPartID, cb) {
+    // x/x/x/ hack taken from https://github.com/brentyi/digikey_parser/blob/master/DigikeyParser.js
+    got(`http://www.digikey.com/product-detail/en/x/x/x/${dkPartID}`).then(response => {
+      const $ = cheerio.load(response.body);
+      let dkPartNumber = $("#reportPartNumber").text();
+      let manufacturerPartNumber = $("meta").filter(function(i, el) {
+        // this === el
+        return $(this).attr("itemprop") === "name";
+      }).attr("content");
 
-  //     if (dkPartNumber) {
-  //       // Look up on Octopart
-  //       octopartLookup.lookupByDigiKeyPN(dkPartNumber, (err, octopartMPN, octopartMfr, octopartDesc, octopartCat) => {
-  //         if (err) {
-  //           return console.error(err);
-  //         }
-
-  //         if (octopartMPN)
-  //           this.Elements.mpn = octopartMPN;
-  //         if (octopartMfr)
-  //           this.Elements.mfr.value = octopartMfr;
-  //         if (octopartDesc)
-  //           this.Elements.desc.value = octopartDesc;
-
-  //         if (octopartCat) {
-  //           this.Elements.category.value = octopartCat;
-  //         }
-
-  //         let validPN = false;
-  //         spreadsheet.findInventoryItemByMPN(octopartMPN, (invResults) => {
-  //           if (invResults) {
-  //             let invItem = invResults.item;
-  //             let ipn = invItem["Part Number"];
-
-  //             let pnPrefixEnd = ipn.indexOf("-");
-  //             if (pnPrefixEnd > 0) {
-  //               let pnPrefix = ipn.substring(0, pnPrefixEnd);
-  //               let pnSuffix = ipn.substring(pnPrefixEnd + 1);
-  //               if ((pnPrefix.length > 0) && (pnSuffix.length > 0)) {
-  //                 // Valid PN's are alphanumeric only
-  //                 if (pnSuffix.indexOf("-") < 0) {
-  //                   this.Elements.category.value = pnPrefix;
-  //                   this.Elements.pn.value = pnSuffix;
-
-  //                   validPN = true;
-  //                 }
-  //               }
-  //             }
-  //           }
-
-  //           if (!validPN && octopartCat) {
-  //             // Generate a new IPN as CAT-(catMaxIPN+1)
-  //             spreadsheet.findInventoryItemsByCategory(octopartCat, (results) => {
-  //               let highestPN = 0;
-
-  //               if (results) {
-  //                 for (let invItem of results) {
-  //                   let ipn = invItem.item["Part Number"];
-
-  //                   if (ipn) {
-  //                     let pnPrefixEnd = ipn.indexOf("-");
-  //                     if (pnPrefixEnd > 0) {
-  //                       let pnSuffix = ipn.substring(pnPrefixEnd + 1);
-  //                       if (pnSuffix.length > 0) {
-  //                         let pn = parseInt(pnSuffix, 10);
-  //                         if (pn > highestPN) {
-  //                           highestPN = pn;
-  //                         }
-  //                       }
-  //                     }
-  //                   }
-  //                 }
-  //               }
-
-  //               this.Elements.pn.value = `${highestPN+1}`.padStart(4, "0");
-  //             });
-  //           }
-  //         });
-  //       });
-  //     }
-  //   }).catch(error => {
-  //     console.log(error.response.body);
-  //   });
-  // }
+      if (dkPartNumber) {
+        let pnResults = {
+          supplierPN: dkPartNumber
+        };
+        this.parseManufacturerPartNumber(manufacturerPartNumber, pnResults, cb);
+      }
+    }).catch(error => {
+      console.log(error.response.body);
+      cb();
+    });
+  }
 
   processBarcode(cb) {
     if (this.isExtendedBarcode(this.kbeData)) {
