@@ -217,6 +217,41 @@ class ScanBarcodePage extends AppPage {
     this.clearFormFields();
   }
 
+  onBtnAutoPopulateClicked() {
+    let mpn = this.Elements.mpn.value;
+    if (mpn) {
+      barcodeScanner.parseManufacturerPartNumber(mpn, null, (mpnResults) => {
+        let {
+          internalPN,
+          // isNewInternalPN,
+          // supplierPN,
+
+          locationID,
+
+          // manufacturerPN,
+          manufacturer,
+          // category,
+          description
+        } = mpnResults;
+
+        if (locationID && !this.Elements.locID.value) {
+          this.Elements.locID.value = locationID;
+        }
+        if (internalPN && (!this.Elements.pn.value || (this.Elements.category.value === "0"))) {
+          let sepIdx = internalPN.indexOf("-");
+          this.Elements.category.value = internalPN.substring(0, sepIdx);
+          this.Elements.pn.value = internalPN.substring(sepIdx + 1);
+        }
+        if (manufacturer && !this.Elements.mfr.value) {
+          this.Elements.mfr.value = manufacturer;
+        }
+        if (description && !this.Elements.desc.value) {
+          this.Elements.desc.value = description;
+        }
+      });
+    }
+  }
+
   onBtnAddClicked() {
     let locID = this.Elements.locID.value.trim().toUpperCase();
     let pnPrefix = this.Elements.category.value.trim();
@@ -345,6 +380,7 @@ class ScanBarcodePage extends AppPage {
       "qty",
       "qtyAction",
       "btnClear",
+      "btnAutoPopulate",
       "btnAdd",
       "results",
       "errorResults",
@@ -363,6 +399,9 @@ class ScanBarcodePage extends AppPage {
 
     this.Elements.btnClear.addEventListener("click",  () => {
       this.onBtnClearClicked();
+    });
+    this.Elements.btnAutoPopulate.addEventListener("click",  () => {
+      this.onBtnAutoPopulateClicked();
     });
     this.Elements.btnAdd.addEventListener("click",  () => {
       this.onBtnAddClicked();

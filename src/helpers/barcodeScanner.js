@@ -178,14 +178,15 @@ class BarcodeScanner extends EventEmitter {
     });
   }
 
-  processDigiKeyExtendedBarcode(kbeData, cb) {
-    // Block prefixes for Digi-Key:
+  processECIA2DBarcode(kbeData, cb) {
+    // Block prefixes for ECIA 2D Data Matrix and PDF417 barcodes (used by e.g. Digi-Key):
     // P		Customer Part Number
     // 1P		Vendor Part Number
     // Q		Quantity
     // 10D	Date code
     // 1T		Lot code
     // 4L		Country of origin
+    // See docs/ECIA_Specifications.pdf for detailed information
 
     let partNumber = this.findExtendedBarcodeBlock(kbeData, "P");
     let manufacturerPartNumber = this.findExtendedBarcodeBlock(kbeData, "1P");
@@ -202,8 +203,8 @@ class BarcodeScanner extends EventEmitter {
     });
   }
 
-  processMouserExtendedBarcode(kbeData, cb) {
-    // Block prefixes for Digi-Key:
+  processMouser2DBarcode(kbeData, cb) {
+    // Block prefixes for Mouser Mata Matrix barcodes:
     // 1P		Vendor Part Number (or Customer Part Number, ugh)
     // Q		Quantity
     // 4L		Country of origin
@@ -270,16 +271,16 @@ class BarcodeScanner extends EventEmitter {
     got(`http://www.digikey.com/product-detail/en/x/x/x/${dkPartID}`).then(response => {
       const $ = cheerio.load(response.body);
       let dkPartNumber = $("#reportPartNumber").text();
-      let manufacturerPartNumber = $("meta").filter(function(i, el) {
+      let manufacturerPartNumber = $("meta").filter(function(/*i, el*/) {
         // this === el
         return $(this).attr("itemprop") === "name";
       }).attr("content");
 
       if (dkPartNumber) {
-        let pnResults = {
-          supplierPN: dkPartNumber
-        };
-        this.parseManufacturerPartNumber(manufacturerPartNumber, pnResults, cb);
+        // Lookup the Digi-Key part number on Octopart
+        octopartLookup.lookupByDigiKeyPN(dkPartNumber, (err, octopartMPN, octopartMfr, octopartDesc, octopartCat) => {
+          this.onOctopartMPNLookup(err, null, dkPartNumber, manufacturerPartNumber, octopartMPN, octopartMfr, octopartDesc, octopartCat, cb);
+        });
       }
     }).catch(error => {
       console.log(error.response.body);
@@ -287,7 +288,7 @@ class BarcodeScanner extends EventEmitter {
     });
   }
 
-  isDigiKeyExtendedBarcode(kbeData) {
+  isECIA2DBarcode(kbeData) {
     if (kbeData.length > 8) {
       if (kbeData[0] === "[)>*F9*06") {
         return true;
@@ -297,7 +298,7 @@ class BarcodeScanner extends EventEmitter {
     return false;
   }
 
-  isMouserExtendedBarcode(kbeData) {
+  isMouser2DBarcode(kbeData) {
     if (kbeData.length > 6) {
       if (kbeData[0] === ">[)>06") {
         return true;
@@ -308,12 +309,12 @@ class BarcodeScanner extends EventEmitter {
   }
 
   processBarcode(cb) {
-    if (this.isDigiKeyExtendedBarcode(this.kbeData)) {
+    if (this.isECIA2DBarcode(this.kbeData)) {
       // Valid Data Matrix or PDF417 barcode
-      this.processDigiKeyExtendedBarcode(this.kbeData, cb);
-    } else if (this.isMouserExtendedBarcode(this.kbeData)) {
-      // Valid Data Matrix barcode
-      this.processMouserExtendedBarcode(this.kbeData, cb);
+      this.processECIA2DBarcode(this.kbeData, cb);
+    } else if (this.isMouser2DBarcode(this.kbeData)) {
+      // Valid Data Matrix barcode. Mouser's 2D barcodes are almost ECIA compliant, but... not.
+      this.processMouser2DBarcode(this.kbeData, cb);
     } else {
       // Probably either a 1D or QR barcode
       this.processSimpleBarcode(this.kbeData, cb);
