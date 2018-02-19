@@ -26,76 +26,73 @@ class ScratchpadPage extends AppPage {
     let {rowIdx, item} = result;
 
     //
-    let data = item["Manufacturer Part Number"];
-    if ((data.length == 22) && (/^\d+$/.test(data))) {
-      let kbeData = [ data ];
-      barcodeScanner.processSimpleBarcode(kbeData, (results) => {
-        let {
-          internalPN,
-          // isNewInternalPN,
-          // supplierPN,
+    let mpn = item["Manufacturer Part Number"];
+    let pn = item["Manufacturer"];
+    let quantity = parseInt(item["Quantity"], 10);
 
-          locationID,
+    let pnResults = barcodeScanner.parsePartNumber(pn);
+    barcodeScanner.parseManufacturerPartNumber(mpn, pnResults, (mpnResults) => {
+      let {
+        internalPN,
+        // isNewInternalPN,
+        // supplierPN,
 
-          manufacturerPN,
-          manufacturer,
-          // category,
-          description,
+        locationID,
 
-          quantity
-        } = results;
+        manufacturerPN,
+        manufacturer,
+        // category,
+        description,
 
-        if (manufacturerPN) {
-          let existingResult = spreadsheet.findInventoryItemByMPN(manufacturerPN);
-          if (existingResult) {
-            let existingRowIdx = existingResult.rowIdx;
-            let existingItem = existingResult.item;
+        // quantity
+      } = mpnResults; // includes pnResults, possibly modified
 
-            let newLocID = item["Location"] || locationID;
-            let oldLocID = existingItem["Location"];
-            if (!existingItem["Location"]) {
-              existingItem["Location"] = newLocID;
-            }
-            existingItem["Part Number"] = `="${internalPN}"`;
-            existingItem["Manufacturer Part Number"] = manufacturerPN;
-            existingItem["Manufacturer"] = manufacturer;
-            existingItem["Description"] = description;
-            existingItem["Quantity"] = parseInt(existingItem["Quantity"], 10) + quantity;
+      let existingResult = spreadsheet.findInventoryItemByMPN(manufacturerPN);
+      if (existingResult && (existingResult.rowIdx != rowIdx)) {
+        let existingRowIdx = existingResult.rowIdx;
+        let existingItem = existingResult.item;
 
-            manufacturer = '=""';
-            description = '=""';
-            quantity = 0;
+        let newLocID = item["Location"] || locationID;
+        let oldLocID = existingItem["Location"];
+        if (!existingItem["Location"]) {
+          existingItem["Location"] = newLocID;
+        }
+        existingItem["Part Number"] = `="${internalPN}"`;
+        existingItem["Manufacturer Part Number"] = manufacturerPN;
+        existingItem["Manufacturer"] = manufacturer;
+        existingItem["Description"] = description;
+        existingItem["Quantity"] = parseInt(existingItem["Quantity"], 10) + quantity;
 
-            if (oldLocID && (oldLocID !== newLocID)) {
-              description = `*** MOVE TO ${existingItem["Location"]} [existing parts are there]`;
-            }
+        manufacturer = '=""';
+        description = '=""';
+        quantity = 0;
 
-            spreadsheet.setInventoryItem(existingRowIdx, existingItem, (err) => {
-              if (err) {
-                return console.error(err);
-              }
-            });
-          }
+        if (oldLocID && (oldLocID !== newLocID)) {
+          description = `*** MOVE TO ${existingItem["Location"]} [existing parts are there]`;
         }
 
-        if (!item["Location"]) {
-          item["Location"] = locationID;
-        }
-        item["Part Number"] = `="${internalPN}"`;
-        item["Manufacturer Part Number"] = manufacturerPN;
-        item["Manufacturer"] = manufacturer;
-        item["Quantity"] = quantity;
-        item["Description"] = description;
-
-        spreadsheet.setInventoryItem(rowIdx, item, (err) => {
+        spreadsheet.setInventoryItem(existingRowIdx, existingItem, (err) => {
           if (err) {
             return console.error(err);
           }
         });
+      }
+
+      if (!item["Location"]) {
+        item["Location"] = locationID;
+      }
+      item["Part Number"] = `="${internalPN}"`;
+      item["Manufacturer Part Number"] = manufacturerPN;
+      item["Manufacturer"] = manufacturer;
+      item["Quantity"] = quantity;
+      item["Description"] = description;
+
+      spreadsheet.setInventoryItem(rowIdx, item, (err) => {
+        if (err) {
+          return console.error(err);
+        }
       });
-    } else {
-      return this.updateNextResult(results);
-    }
+    });
 
     //
     setTimeout(() => {

@@ -279,7 +279,7 @@ export function initialize(doc_id, credentials, cb) {
   }
 }
 
-function findInventoryItemInternal(findColIdx, value, cb) {
+function findInventoryItemInternal(findColIdx, value) {
   for (let rowIdx=0; rowIdx<invTable.length; rowIdx++) {
     let row = invTable[rowIdx];
     let itemValue = row[findColIdx].value;
