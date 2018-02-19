@@ -2,7 +2,7 @@
   "name": "HardInventory",
   "productName": "Hard Inventory",
   "description": "Inventory management for hardware startups",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "author": "Richard Sim <github@devras.com>",
   "copyright": "© 2018, Proxxi Technology Corporation",
@@ -10,6 +10,11 @@
   "main": "app/background.js",
   "build": {
     "appId": "tech.proxxi.hard-inventory",
+    "productName": "Hard Inventory",
+    "copyright": "© 2018, Proxxi Technology Corporation",
+    "linux": {
+      "category": "Utility"
+    },
     "files": [
       "app/**/*",
       "node_modules/**/*",
@@ -34,7 +39,8 @@
     "scratchpad": "node scratchpad.js",
     "build": "webpack --display-modules --output-pathinfo --debug --display-error-details --config=build/webpack.app.config.js --env=development",
     "debug": "webpack --display-modules --output-pathinfo --debug --display-error-details --config=build/webpack.app.config.js --env=development && electron-builder",
-    "release": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder"
+    "release": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder",
+    "release-all": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder -mwl"
   },
   "dependencies": {
     "ag-grid": "^16.0.1",
