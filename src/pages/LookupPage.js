@@ -154,35 +154,34 @@ class LookupPage extends AppPage {
 
     if (isMPN) {
       // Manufacturer P/N
-      spreadsheet.findInventoryItemByMPN(val, (result) => {
-        if (result != null) {
-          let item = result.item;
+      let result = spreadsheet.findInventoryItemByMPN(val);
+      if (result != null) {
+        let item = result.item;
 
-          let locID = item["Location"];
-          this.setOutputHeaderLocID(`Location ID: ${locID}`);
-          this.rawBarcodeDataLocID = {
-            data: "LOC-" + locID,
-            text: "LOC: " + locID
-          };
+        let locID = item["Location"];
+        this.setOutputHeaderLocID(`Location ID: ${locID}`);
+        this.rawBarcodeDataLocID = {
+          data: "LOC-" + locID,
+          text: "LOC: " + locID
+        };
 
-          spreadsheet.findInventoryItemsByLocation(locID, (results) => {
-            if (results != null) {
-              this.appendOutputLocID(`Number of Items: ${results.length} (displaying single item)`);
-            }
-          });
+        spreadsheet.findInventoryItemsByLocation(locID, (results) => {
+          if (results != null) {
+            this.appendOutputLocID(`Number of Items: ${results.length} (displaying single item)`);
+          }
+        });
 
-          let internalPN = item["Part Number"];
-          this.rawBarcodeDataPN = {
-            data: "IPN-" + internalPN,
-            text: "IPN: " + internalPN
-          };
+        let internalPN = item["Part Number"];
+        this.rawBarcodeDataPN = {
+          data: "IPN-" + internalPN,
+          text: "IPN: " + internalPN
+        };
 
-          this.appendLookupResultsPN(result, 0);
+        this.appendLookupResultsPN(result, 0);
 
-          this.hidePage();
-          this.Elements.results.style.display = "flex";
-        }
-      });
+        this.hidePage();
+        this.Elements.results.style.display = "flex";
+      }
     } else if (isIPN) {
       // Internal P/N
       spreadsheet.findInventoryItemsByPN(val, (results) => {
@@ -418,7 +417,7 @@ class LookupPage extends AppPage {
       this.Elements[name] = document.querySelector(`#${this.pageName}-${name}`);
     }
 
-    this.Elements.type.addEventListener("change", (e) => {
+    this.Elements.type.addEventListener("change", (/*e*/) => {
       this.updateValueHint();
     });
 

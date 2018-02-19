@@ -264,51 +264,50 @@ class ScanBarcodePage extends AppPage {
     let qty = qtyStr ? parseInt(qtyStr, 10) : 0;
     let qtyAction = this.Elements.qtyAction.value;
 
-    spreadsheet.findInventoryItemByMPN(mpn, (res) => {
-      if (res) {
-        // Update
-        let rowIdx = res.rowIdx;
-        let item = res.item;
+    let res = spreadsheet.findInventoryItemByMPN(mpn);
+    if (res) {
+      // Update
+      let rowIdx = res.rowIdx;
+      let item = res.item;
 
-        if (locID) {
-          item["Location"] = `="${locID}"`;
-        }
-
-        if (pnSuffix) {
-          item["Part Number"] = `="${pn}"`;
-        }
-
-        if (mfr) {
-          item["Manufacturer"] = `="${mfr}"`;
-        }
-
-        if (desc) {
-          item["Description"] = `="${desc}"`;
-        }
-
-        if (qtyAction === "add") {
-          item["Quantity"] = parseInt(item["Quantity"], 10) + qty;
-        } else {
-          item["Quantity"] = qty;
-        }
-
-        spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
-          this.displayInventoryItemResults("Inventory item updated", rowIdx);
-        });
-      } else {
-        // Add
-        spreadsheet.addInventoryItem({
-          loc: `="${locID}"`,
-          pn: `="${pn}"`,
-          mpn: `="${mpn}"`,
-          mfr: `="${mfr}"`,
-          qty: qty,
-          desc: `="${desc}"`
-        }, (err, rowIdx) => {
-          this.displayInventoryItemResults("Inventory item added", rowIdx);
-        });
+      if (locID) {
+        item["Location"] = `="${locID}"`;
       }
-    });
+
+      if (pnSuffix) {
+        item["Part Number"] = `="${pn}"`;
+      }
+
+      if (mfr) {
+        item["Manufacturer"] = `="${mfr}"`;
+      }
+
+      if (desc) {
+        item["Description"] = `="${desc}"`;
+      }
+
+      if (qtyAction === "add") {
+        item["Quantity"] = parseInt(item["Quantity"], 10) + qty;
+      } else {
+        item["Quantity"] = qty;
+      }
+
+      spreadsheet.setInventoryItem(rowIdx, item, (err, rowIdx) => {
+        this.displayInventoryItemResults("Inventory item updated", rowIdx);
+      });
+    } else {
+      // Add
+      spreadsheet.addInventoryItem({
+        loc: `="${locID}"`,
+        pn: `="${pn}"`,
+        mpn: `="${mpn}"`,
+        mfr: `="${mfr}"`,
+        qty: qty,
+        desc: `="${desc}"`
+      }, (err, rowIdx) => {
+        this.displayInventoryItemResults("Inventory item added", rowIdx);
+      });
+    }
   }
 
   displayInventoryItemResults(msg, rowIdx) {

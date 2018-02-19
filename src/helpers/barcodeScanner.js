@@ -90,73 +90,72 @@ class BarcodeScanner extends EventEmitter {
       });
     }
 
-    spreadsheet.findInventoryItemByMPN(manufacturerPN, (invResults) => {
-      let locationID;
+    let invResults = spreadsheet.findInventoryItemByMPN(manufacturerPN);
+    let locationID;
 
-      if (invResults) {
-        let invItem = invResults.item;
-        let ipn = invItem["Part Number"];
+    if (invResults) {
+      let invItem = invResults.item;
+      let ipn = invItem["Part Number"];
 
-        let pnResults = this.parsePartNumber(ipn);
-        internalPN = pnResults.internalPN;
-        if (!supplierPN) {
-          supplierPN = pnResults.supplierPN;
-        }
-
-        locationID = invItem["Location"];
+      let pnResults = this.parsePartNumber(ipn);
+      internalPN = pnResults.internalPN;
+      if (!supplierPN) {
+        supplierPN = pnResults.supplierPN;
       }
 
-      if (internalPN || !octopartCat) {
-        // Without a category we can't generate an IPN, so call it here
-        return cb({
-          internalPN,
-          supplierPN,
+      locationID = invItem["Location"];
+    }
 
-          locationID,
+    if (internalPN || !octopartCat) {
+      // Without a category we can't generate an IPN, so call it here
+      return cb({
+        internalPN,
+        supplierPN,
 
-          manufacturerPN,
-          manufacturer,
-          category,
-          description
-        });
-      }
+        locationID,
 
-      // Generate a new IPN as <cat>-<catMaxIPN+1>
-      spreadsheet.findInventoryItemsByCategory(octopartCat, (results) => {
-        let highestPN = 0;
+        manufacturerPN,
+        manufacturer,
+        category,
+        description
+      });
+    }
 
-        if (results) {
-          for (let invItem of results) {
-            let ipn = invItem.item["Part Number"];
+    // Generate a new IPN as <cat>-<catMaxIPN+1>
+    spreadsheet.findInventoryItemsByCategory(octopartCat, (results) => {
+      let highestPN = 0;
 
-            if (ipn) {
-              let pnPrefixEnd = ipn.indexOf("-");
-              if (pnPrefixEnd > 0) {
-                let pnSuffix = ipn.substring(pnPrefixEnd + 1);
-                if (pnSuffix.length > 0) {
-                  let pn = parseInt(pnSuffix, 10);
-                  if (pn > highestPN) {
-                    highestPN = pn;
-                  }
+      if (results) {
+        for (let invItem of results) {
+          let ipn = invItem.item["Part Number"];
+
+          if (ipn) {
+            let pnPrefixEnd = ipn.indexOf("-");
+            if (pnPrefixEnd > 0) {
+              let pnSuffix = ipn.substring(pnPrefixEnd + 1);
+              if (pnSuffix.length > 0) {
+                let pn = parseInt(pnSuffix, 10);
+                if (pn > highestPN) {
+                  highestPN = pn;
                 }
               }
             }
           }
         }
+      }
 
-        internalPN = `${octopartCat}-` + `${highestPN+1}`.padStart(4, "0");
-        return cb({
-          internalPN,
-          isNewInternalPN: true,
-          supplierPN,
+      internalPN = `${octopartCat}-` + `${highestPN+1}`.padStart(4, "0");
+      return cb({
+        internalPN,
+        isNewInternalPN: true,
+        supplierPN,
 
-          locationID,
+        locationID,
 
-          manufacturerPN,
-          manufacturer,
-          category,
-          description
-        });
+        manufacturerPN,
+        manufacturer,
+        category,
+        description
       });
     });
   }

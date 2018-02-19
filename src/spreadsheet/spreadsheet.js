@@ -293,11 +293,11 @@ function findInventoryItemInternal(findColIdx, value, cb) {
         item[colName] = cell.value;
       }
 
-      return cb({ rowIdx, item });
+      return { rowIdx, item };
     }
   }
 
-  cb(null);
+  return null;
 }
 
 function findInventoryItemsInternal(findColIdx, value, cb) {
@@ -350,10 +350,10 @@ function findPrefixedInventoryItemsInternal(findColIdx, prefix, cb) {
   cb((results.length > 0) ? results : null);
 }
 
-export function findInventoryItemByMPN(mpn, cb) {
+export function findInventoryItemByMPN(mpn) {
   let mpnColIdx = invHeaderNameToIndex["mpn"];
 
-  findInventoryItemInternal(mpnColIdx, mpn, cb);
+  return findInventoryItemInternal(mpnColIdx, mpn);
 }
 
 export function findInventoryItemsByPN(pn, cb) {
@@ -371,7 +371,7 @@ export function findInventoryItemsByLocation(loc, cb) {
 export function findInventoryItemsByCategory(cat, cb) {
   let pnColIdx = invHeaderNameToIndex["pn"];
 
-  findPrefixedInventoryItemsInternal(pnColIdx, cat, cb);
+  findPrefixedInventoryItemsInternal(pnColIdx, `${cat}-`, cb);
 }
 
 export function getInventoryItemDirect(rowIdx, cb) {
