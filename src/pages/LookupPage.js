@@ -155,10 +155,49 @@ class LookupPage extends AppPage {
     if (isMPN) {
       // Manufacturer P/N
       let result = spreadsheet.findInventoryItemByMPN(val);
-      if (result != null) {
-        let item = result.item;
+      if (!result) {
+        this.Elements.notification.innerHTML = `Nothing found for manufacturer p/n '${val}'.`;
+        this.Elements.notification.opened = true;
+        return;
+      }
 
-        let locID = item["Location"];
+      let item = result.item;
+
+      let locID = item["Location"];
+      this.setOutputHeaderLocID(`Location ID: ${locID}`);
+      this.rawBarcodeDataLocID = {
+        data: "LOC-" + locID,
+        text: "LOC: " + locID
+      };
+
+      spreadsheet.findInventoryItemsByLocation(locID, (results) => {
+        if (results != null) {
+          this.appendOutputLocID(`Items at Location: ${results.length}`);
+        }
+      });
+
+      let internalPN = item["Part Number"];
+      this.rawBarcodeDataPN = {
+        data: "IPN-" + internalPN,
+        text: "IPN: " + internalPN
+      };
+
+      this.appendLookupResultsPN(result, 0);
+
+      this.hidePage();
+      this.Elements.results.style.display = "flex";
+    } else if (isIPN) {
+      // Internal P/N
+      spreadsheet.findInventoryItemsByPN(val, (results) => {
+        if (!results || !results.length) {
+          this.Elements.notification.innerHTML = `Nothing found for internal p/n '${val}'.`;
+          this.Elements.notification.opened = true;
+          return;
+        }
+
+        let firstItem = results[0].item;
+
+        let locID = firstItem["Location"];
         this.setOutputHeaderLocID(`Location ID: ${locID}`);
         this.rawBarcodeDataLocID = {
           data: "LOC-" + locID,
@@ -167,73 +206,46 @@ class LookupPage extends AppPage {
 
         spreadsheet.findInventoryItemsByLocation(locID, (results) => {
           if (results != null) {
-            this.appendOutputLocID(`Number of Items: ${results.length} (displaying single item)`);
+            this.appendOutputLocID(`Items at Location: ${results.length}`);
           }
         });
 
-        let internalPN = item["Part Number"];
-        this.rawBarcodeDataPN = {
-          data: "IPN-" + internalPN,
-          text: "IPN: " + internalPN
-        };
+        for (let i=0; i<results.length; i++) {
+          let result = results[i];
 
-        this.appendLookupResultsPN(result, 0);
+          this.appendLookupResultsPN(result, i);
+        }
 
         this.hidePage();
         this.Elements.results.style.display = "flex";
-      }
-    } else if (isIPN) {
-      // Internal P/N
-      spreadsheet.findInventoryItemsByPN(val, (results) => {
-        if (results != null) {
-          let firstItem = results[0].item;
-
-          let locID = firstItem["Location"];
-          this.setOutputHeaderLocID(`Location ID: ${locID}`);
-          this.rawBarcodeDataLocID = {
-            data: "LOC-" + locID,
-            text: "LOC: " + locID
-          };
-
-          spreadsheet.findInventoryItemsByLocation(locID, (results) => {
-            if (results != null) {
-              this.appendOutputLocID(`Number of Items: ${results.length}`);
-            }
-          });
-
-          for (let i=0; i<results.length; i++) {
-            let result = results[i];
-
-            this.appendLookupResultsPN(result, i);
-          }
-
-          this.hidePage();
-          this.Elements.results.style.display = "flex";
-        }
       });
     } else {
       // Location ID
       spreadsheet.findInventoryItemsByLocation(val, (results) => {
-        if (results != null) {
-          let firstItem = results.item[0];
-
-          let locID = firstItem["Location"];
-          this.setOutputHeaderLocID(`Location ID: ${locID}`);
-          this.appendOutputLocID(`Number of Items: ${results.length}`);
-          this.rawBarcodeDataLocID = {
-            data: "LOC-" + locID,
-            text: "LOC: " + locID
-          };
-
-          for (let i=0; i<results.length; i++) {
-            let result = results[i];
-
-            this.appendLookupResultsPN(result, i);
-          }
-
-          this.hidePage();
-          this.Elements.results.style.display = "flex";
+        if (!results || !results.length) {
+          this.Elements.notification.innerHTML = `Nothing found for location '${val}'.`;
+          this.Elements.notification.opened = true;
+          return;
         }
+
+        let firstItem = results[0].item;
+
+        let locID = firstItem["Location"];
+        this.setOutputHeaderLocID(`Location ID: ${locID}`);
+        this.appendOutputLocID(`Number of Items: ${results.length}`);
+        this.rawBarcodeDataLocID = {
+          data: "LOC-" + locID,
+          text: "LOC: " + locID
+        };
+
+        for (let i=0; i<results.length; i++) {
+          let result = results[i];
+
+          this.appendLookupResultsPN(result, i);
+        }
+
+        this.hidePage();
+        this.Elements.results.style.display = "flex";
       });
     }
   }
@@ -396,6 +408,7 @@ class LookupPage extends AppPage {
 
     this.Elements = {};
     let elementNames = [
+      "notification",
       "type",
       "typeMenu",
       "typeMPN",
