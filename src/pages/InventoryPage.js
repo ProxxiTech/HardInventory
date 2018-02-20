@@ -176,6 +176,10 @@ class InventoryPage extends AppPage {
       this.gridOptions.api.destroy();
     }
     this.updateSpreadsheetGrid();
+  }
+
+  showPage() {
+    super.showPage();
 
     // this.gridOptions.api.sizeColumnsToFit();
 

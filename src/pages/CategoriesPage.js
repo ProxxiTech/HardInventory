@@ -259,6 +259,10 @@ class CategoriesPage extends AppPage {
 
   onEnter() {
     super.onEnter();
+  }
+
+  showPage() {
+    super.showPage();
 
     this.gridOptions.api.sizeColumnsToFit();
   }
