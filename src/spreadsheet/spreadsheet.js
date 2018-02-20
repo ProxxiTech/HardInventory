@@ -300,7 +300,7 @@ function findInventoryItemInternal(findColIdx, value) {
   return null;
 }
 
-function findInventoryItemsInternal(findColIdx, value, cb) {
+function findInventoryItemsInternal(findColIdx, value) {
   value = value.toLowerCase();
 
   let results = [];
@@ -322,10 +322,10 @@ function findInventoryItemsInternal(findColIdx, value, cb) {
     }
   }
 
-  cb((results.length > 0) ? results : null);
+  return (results.length > 0) ? results : null;
 }
 
-function findPrefixedInventoryItemsInternal(findColIdx, prefix, cb) {
+function findPrefixedInventoryItemsInternal(findColIdx, prefix) {
   prefix = prefix.toLowerCase();
 
   let results = [];
@@ -347,7 +347,7 @@ function findPrefixedInventoryItemsInternal(findColIdx, prefix, cb) {
     }
   }
 
-  cb((results.length > 0) ? results : null);
+  return (results.length > 0) ? results : null;
 }
 
 export function findInventoryItemByMPN(mpn) {
@@ -356,22 +356,22 @@ export function findInventoryItemByMPN(mpn) {
   return findInventoryItemInternal(mpnColIdx, mpn);
 }
 
-export function findInventoryItemsByPN(pn, cb) {
+export function findInventoryItemsByPN(pn) {
   let pnColIdx = invHeaderNameToIndex["pn"];
 
-  findInventoryItemsInternal(pnColIdx, pn, cb);
+  return findInventoryItemsInternal(pnColIdx, pn);
 }
 
-export function findInventoryItemsByLocation(loc, cb) {
+export function findInventoryItemsByLocation(loc) {
   let locColIdx = invHeaderNameToIndex["loc"];
 
-  findInventoryItemsInternal(locColIdx, loc, cb);
+  return findInventoryItemsInternal(locColIdx, loc);
 }
 
-export function findInventoryItemsByCategory(cat, cb) {
+export function findInventoryItemsByCategory(cat) {
   let pnColIdx = invHeaderNameToIndex["pn"];
 
-  findPrefixedInventoryItemsInternal(pnColIdx, `${cat}-`, cb);
+  return findPrefixedInventoryItemsInternal(pnColIdx, `${cat}-`);
 }
 
 export function getInventoryItemDirect(rowIdx, cb) {

@@ -101,9 +101,8 @@ class ScratchpadPage extends AppPage {
   }
 
   onBtn1D() {
-    spreadsheet.findInventoryItemsByCategory("0", (results) => {
-      this.updateNextResult(results);
-    });
+    let results = spreadsheet.findInventoryItemsByCategory("0");
+    this.updateNextResult(results);
   }
 
   onInitialize(appState) {

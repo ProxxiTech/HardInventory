@@ -51,7 +51,7 @@ class LookupPage extends AppPage {
   }
 
   clearFormFields() {
-    this.Elements.type.value = this.Elements.typeMPN.value;
+    this.Elements.type.value = this.Elements.typePN.value;
     this.Elements.type._updateButton();
 
     this.Elements.value.value = "";
@@ -62,26 +62,116 @@ class LookupPage extends AppPage {
     this.clearFormFields();
   }
 
-  setOutputHeaderLocID(str) {
-    this.Elements.resultsHeaderLocID.innerHTML = str;
+  appendLookupResultsForLocation(locID, results) {
+    let idSuffixResult = (locID) ? `-${locID}` : "-unknown";
+
+    let resultsLocID = this.Elements.resultsLocID.cloneNode(true);
+    resultsLocID.id += idSuffixResult;
+    resultsLocID.style.display = "block";
+    this.Elements.resultsListLocation.appendChild(resultsLocID);
+
+    let resultsHeaderLocID = resultsLocID.querySelector("#lookup-resultsHeaderLocID");
+    resultsHeaderLocID.id += idSuffixResult;
+    resultsHeaderLocID.innerHTML = (locID) ? `Location: ${locID}` : "No Location Set";
+
+    let locationResults = spreadsheet.findInventoryItemsByLocation(locID);
+    if (locationResults) {
+      let btnResultsPrintLocID = resultsLocID.querySelector("#lookup-btnResultsPrintLocID");
+      btnResultsPrintLocID.id += idSuffixResult;
+      if (locID) {
+        btnResultsPrintLocID.addEventListener("click",  () => {
+          let barcodeData = {
+            data: "LOC-" + locID,
+            text: "LOC: " + locID
+          };
+          this.onBtnResultsPrintClicked(barcodeData);
+        });
+      } else {
+        btnResultsPrintLocID.style.display = "none";
+      }
+
+      let lookupResultsLocID = resultsLocID.querySelector("#lookup-lookupResultsLocID");
+      lookupResultsLocID.id += idSuffixResult;
+
+      this.appendOutputDiv(lookupResultsLocID, `Items at this Location: ${locationResults.length}`);
+      if (locationResults.length != results.length) {
+        this.appendOutputDiv(lookupResultsLocID, `${results.length} item${(results.length == 1) ? "" : "s"} displayed`);
+      } else if (locationResults.length > 0) {
+        this.appendOutputDiv(lookupResultsLocID, "Displaying all items");
+      }
+    }
+
+    //
+    let resultsListPN = this.Elements.resultsListPN.cloneNode(true);
+    resultsListPN.id += idSuffixResult;
+    resultsListPN.style.display = "flex";
+    this.Elements.resultsListLocation.appendChild(resultsListPN);
+
+    for (let subResultIdx=0; subResultIdx<results.length; subResultIdx++) {
+      let {rowIdx, item} = results[subResultIdx];
+
+      let idSuffixSubResult = `${idSuffixResult}_${subResultIdx}`;
+
+      let resultsPN = this.Elements.resultsPN.cloneNode(true);
+      resultsPN.id += idSuffixSubResult;
+      resultsPN.style.display = "block";
+
+      let resultsHeaderPN = resultsPN.querySelector("#lookup-resultsHeaderPN");
+      resultsHeaderPN.id += idSuffixSubResult;
+      resultsHeaderPN.innerHTML = `Part Number: ${item["Part Number"]}`;
+
+      let btnResultsPrintPN = resultsPN.querySelector("#lookup-btnResultsPrintPN");
+      btnResultsPrintPN.id += idSuffixSubResult;
+      btnResultsPrintPN.addEventListener("click",  () => {
+        let val = item["Part Number"];
+        let barcodeData = {
+          data: "IPN-" + val,
+          text: "IPN: " + val
+        };
+        this.onBtnResultsPrintClicked(barcodeData);
+      });
+
+      let lookupResultsPN = resultsPN.querySelector("#lookup-lookupResultsPN");
+      lookupResultsPN.id += idSuffixSubResult;
+      this.appendOutputDiv(lookupResultsPN, `Inventory #: ${rowIdx}`);
+      this.appendOutputDiv(lookupResultsPN, `Mfr Part Number: ${item["Manufacturer Part Number"]}`);
+      this.appendOutputDiv(lookupResultsPN, `Manufactuer: ${item["Manufacturer"]}`);
+      this.appendOutputDiv(lookupResultsPN, `Quantity: ${item["Quantity"]}`);
+      this.appendOutputDiv(lookupResultsPN, `Description: ${item["Description"]}`);
+
+      resultsListPN.appendChild(resultsPN);
+    }
   }
 
-  appendOutputLocID(str) {
+  appendOutputDiv(parent, str) {
     let el = document.createElement("div");
     el.innerHTML = str;
 
-    this.Elements.lookupResultsLocID.appendChild(el);
+    parent.appendChild(el);
   }
 
-  setOutputHeaderPN(str) {
-    this.Elements.resultsHeaderPN.innerHTML = str;
+  displayLookupResults(results) {
+    let groups = this.coalateItemsByLocation(results);
+    for (let [locID, items] of groups) {
+      this.appendLookupResultsForLocation(locID, items);
+    }
   }
 
-  appendOutputPN(lookupResultsPN, str) {
-    let el = document.createElement("div");
-    el.innerHTML = str;
+  coalateItemsByLocation(results) {
+    let groups = new Map();
+    for (let result of results) {
+      let locID = result.item["Location"].toUpperCase();
 
-    lookupResultsPN.appendChild(el);
+      let group = groups.get(locID);
+      if (!group) {
+        group = [];
+        groups.set(locID, group);
+      }
+
+      group.push(result);
+    }
+
+    return groups;
   }
 
   clearResults() {
@@ -90,53 +180,10 @@ class LookupPage extends AppPage {
     this.rawBarcodeDataLocID = null;
     this.rawBarcodeDataPN = null;
 
-    this.Elements.resultsHeaderLocID.innerHTML = "";
-
-    let el;
-    el = this.Elements.lookupResultsLocID;
+    let el = this.Elements.resultsListLocation;
     while (el.firstChild) {
       el.removeChild(el.firstChild);
     }
-    el = this.Elements.resultsListPN;
-    while (el.firstChild) {
-      el.removeChild(el.firstChild);
-    }
-  }
-
-  appendLookupResultsPN(result, idx) {
-    let rowIdx = result.rowIdx;
-    let item = result.item;
-
-    let el = this.Elements.resultsPN.cloneNode(true);
-
-    let resultsHeaderPN = el.querySelector("#lookup-resultsHeaderPN");
-    resultsHeaderPN.innerHTML = `Part Number: ${item["Part Number"]}`;
-    resultsHeaderPN.id += idx.toString();
-
-    let btnResultsPrintPN = el.querySelector("#lookup-btnResultsPrintPN");
-    btnResultsPrintPN.addEventListener("click",  () => {
-      let val = item["Part Number"];
-      let barcodeData = {
-        data: "IPN-" + val,
-        text: "IPN: " + val
-      };
-      this.onBtnResultsPrintClicked(barcodeData);
-    });
-    btnResultsPrintPN.id += idx.toString();
-
-    let lookupResultsPN = el.querySelector("#lookup-lookupResultsPN");
-    this.appendOutputPN(lookupResultsPN, `Inventory #: ${rowIdx}`);
-    this.appendOutputPN(lookupResultsPN, `Mfr Part Number: ${item["Manufacturer Part Number"]}`);
-    this.appendOutputPN(lookupResultsPN, `Manufactuer: ${item["Manufacturer"]}`);
-    this.appendOutputPN(lookupResultsPN, `Quantity: ${item["Quantity"]}`);
-    this.appendOutputPN(lookupResultsPN, `Description: ${item["Description"]}`);
-    lookupResultsPN.id += idx.toString();
-
-    el.id += idx.toString();
-    this.Elements.resultsListPN.appendChild(el);
-
-    el.style.display = "block";
-    return el;
   }
 
   onBtnLookupClicked() {
@@ -161,92 +208,37 @@ class LookupPage extends AppPage {
         return;
       }
 
-      let item = result.item;
-
-      let locID = item["Location"];
-      this.setOutputHeaderLocID(`Location ID: ${locID}`);
-      this.rawBarcodeDataLocID = {
-        data: "LOC-" + locID,
-        text: "LOC: " + locID
-      };
-
-      spreadsheet.findInventoryItemsByLocation(locID, (results) => {
-        if (results != null) {
-          this.appendOutputLocID(`Items at Location: ${results.length}`);
-        }
-      });
-
-      let internalPN = item["Part Number"];
-      this.rawBarcodeDataPN = {
-        data: "IPN-" + internalPN,
-        text: "IPN: " + internalPN
-      };
-
-      this.appendLookupResultsPN(result, 0);
+      let results = [ result ];
+      this.displayLookupResults(results);
 
       this.hidePage();
       this.Elements.results.style.display = "flex";
     } else if (isIPN) {
       // Internal P/N
-      spreadsheet.findInventoryItemsByPN(val, (results) => {
-        if (!results || !results.length) {
-          this.Elements.notification.innerHTML = `Nothing found for internal p/n '${val}'.`;
-          this.Elements.notification.opened = true;
-          return;
-        }
+      let results = spreadsheet.findInventoryItemsByPN(val);
+      if (!results || !results.length) {
+        this.Elements.notification.innerHTML = `Nothing found for internal p/n '${val}'.`;
+        this.Elements.notification.opened = true;
+        return;
+      }
 
-        let firstItem = results[0].item;
+      this.displayLookupResults(results);
 
-        let locID = firstItem["Location"];
-        this.setOutputHeaderLocID(`Location ID: ${locID}`);
-        this.rawBarcodeDataLocID = {
-          data: "LOC-" + locID,
-          text: "LOC: " + locID
-        };
-
-        spreadsheet.findInventoryItemsByLocation(locID, (results) => {
-          if (results != null) {
-            this.appendOutputLocID(`Items at Location: ${results.length}`);
-          }
-        });
-
-        for (let i=0; i<results.length; i++) {
-          let result = results[i];
-
-          this.appendLookupResultsPN(result, i);
-        }
-
-        this.hidePage();
-        this.Elements.results.style.display = "flex";
-      });
+      this.hidePage();
+      this.Elements.results.style.display = "flex";
     } else {
       // Location ID
-      spreadsheet.findInventoryItemsByLocation(val, (results) => {
-        if (!results || !results.length) {
-          this.Elements.notification.innerHTML = `Nothing found for location '${val}'.`;
-          this.Elements.notification.opened = true;
-          return;
-        }
+      let results = spreadsheet.findInventoryItemsByLocation(val);
+      if (!results || !results.length) {
+        this.Elements.notification.innerHTML = `Nothing found for location '${val}'.`;
+        this.Elements.notification.opened = true;
+        return;
+      }
 
-        let firstItem = results[0].item;
+      this.displayLookupResults(results);
 
-        let locID = firstItem["Location"];
-        this.setOutputHeaderLocID(`Location ID: ${locID}`);
-        this.appendOutputLocID(`Number of Items: ${results.length}`);
-        this.rawBarcodeDataLocID = {
-          data: "LOC-" + locID,
-          text: "LOC: " + locID
-        };
-
-        for (let i=0; i<results.length; i++) {
-          let result = results[i];
-
-          this.appendLookupResultsPN(result, i);
-        }
-
-        this.hidePage();
-        this.Elements.results.style.display = "flex";
-      });
+      this.hidePage();
+      this.Elements.results.style.display = "flex";
     }
   }
 
@@ -354,46 +346,6 @@ class LookupPage extends AppPage {
           }
         });
       });
-
-      // let printWindow = new BrowserWindow({
-      //   width: 50,
-      //   height: 50,
-      //   center: true,
-      //   useContentSize: true,
-      //   // closable: false,
-      //   resizable: false,
-      //   skipTaskbar: true,
-      //   show: false
-      // });
-
-      // printWindow.loadURL(
-      //   url.format({
-      //     pathname: path.join(__dirname, "../../print_barcode.html"),
-      //     protocol: "file:",
-      //     slashes: true
-      //   })
-      // );
-
-      // printWindow.webContents.on("dom-ready", () => {
-      //   let webContentsID = printWindow.webContents.id;
-      //   ipcRenderer.send("setBarcodeData", { webContentsID, pngImage });
-      // });
-
-      // printWindow.webContents.on("did-finish-load", () => {
-      //   let printers = printWindow.webContents.getPrinters();
-      //   console.log(JSON.stringify(printers, null, 4));
-
-      //   printWindow.webContents.print({ silent: true });
-
-      //   setTimeout(() => {
-      //     printWindow.destroy();
-      //     printWindow = null;
-      //   }, 5000);
-      // });
-
-      // printWindow.webContents.once("ready-to-show", () => {
-      //   // printWindow.show();
-      // });
     });
   }
 
@@ -419,11 +371,16 @@ class LookupPage extends AppPage {
       "btnClear",
       "btnLookup",
       "results",
+      "resultsListLocation",
+      "resultsLocID",
       "resultsHeaderLocID",
-      "lookupResultsLocID",
       "btnResultsPrintLocID",
+      "lookupResultsLocID",
       "resultsListPN",
       "resultsPN",
+      "resultsHeaderPN",
+      "btnResultsPrintPN",
+      "lookupResultsPN",
       "btnResultsBack"
     ];
     for (let name of elementNames) {
@@ -445,9 +402,6 @@ class LookupPage extends AppPage {
     this.clearResults();
 
     this.Elements.results.style.display = "none";
-    this.Elements.btnResultsPrintLocID.addEventListener("click",  () => {
-      this.onBtnResultsPrintLocIDClicked();
-    });
     this.Elements.btnResultsBack.addEventListener("click",  () => {
       this.onBtnResultsBackClicked();
     });

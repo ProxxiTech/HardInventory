@@ -117,3 +117,17 @@ a {
 .formgrid .fgR67 { grid-row-start: 6; grid-row-end: 8; }
 .formgrid .fgR78 { grid-row-start: 7; grid-row-end: 9; }
 .formgrid .fgR89 { grid-row-start: 8; grid-row-end: 10; }
+
+.lookupResultsLocID {
+  margin: 0px 0px 10px 0px;
+  flex-shrink: 0;
+}
+
+.lookupResultsListPN {
+  margin: 0px 0px 10px 0px;
+  flex-shrink: 0;
+}
+
+.lookupResultsListPN+.lookupResultsLocID {
+  margin: 20px 0px 10px 0px;
+}

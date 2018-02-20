@@ -61,10 +61,10 @@
       <div class="formgrid fg1w-xwide">
         <x-select id="lookup-type" class="fgR1 fgC1" style="min-width: 160px; max-width: 170px;">
           <x-menu id="lookup-typeMenu">
-            <x-menuitem id="lookup-typeMPN" value='mpn' toggled>
+            <x-menuitem id="lookup-typeMPN" value='mpn'>
               <x-label>Manufacturer P/N</x-label>
             </x-menuitem>
-            <x-menuitem id="lookup-typePN" value='pn'>
+            <x-menuitem id="lookup-typePN" value='pn' toggled>
               <x-label>Internal P/N</x-label>
             </x-menuitem>
             <x-menuitem id="lookup-typeLocID" value='locid'>
@@ -93,36 +93,38 @@
         </x-box>
       </div>
     </x-box>
-    <x-box vertical id="lookup-results" class="container" style="display: none;">
-      <x-card style="margin-top: 0px;">
-        <header>
-          <strong id="lookup-resultsHeaderLocID" style="font-size: larger;"></strong>
-          <x-button id="lookup-btnResultsPrintLocID" skin="textured" style="float: right;">
-            <x-box>
-              <x-icon name='print'></x-icon>
-              <x-label>Print Barcode</x-label>
-            </x-box>
-          </x-button>
-        </header>
-        <main id="lookup-lookupResultsLocID">
-        </main>
-      </x-card>
-      <x-box vertical id="lookup-resultsListPN">
-        <x-card id="lookup-resultsPN" style="display: none; margin-top: 0px;">
+    <x-box vertical id="lookup-results" class="container" style="display: none; overflow-y: scroll;">
+      <x-box vertical id="lookup-resultsListLocation" style="align-items: stretch; justify-content: flex-start; flex-shrink: 0;">
+        <x-card id="lookup-resultsLocID" class="lookupResultsLocID" style="display: none;">
           <header>
-            <strong id="lookup-resultsHeaderPN" style="font-size: larger;"></strong>
-            <x-button id="lookup-btnResultsPrintPN" skin="textured" style="float: right;">
+            <strong id="lookup-resultsHeaderLocID" style="font-size: larger;"></strong>
+            <x-button id="lookup-btnResultsPrintLocID" skin="textured" style="float: right;">
               <x-box>
                 <x-icon name='print'></x-icon>
                 <x-label>Print Barcode</x-label>
               </x-box>
             </x-button>
           </header>
-          <main id="lookup-lookupResultsPN">
+          <main id="lookup-lookupResultsLocID">
           </main>
         </x-card>
+        <x-box vertical id="lookup-resultsListPN" class="lookupResultsListPN" style="display: none;">
+          <x-card id="lookup-resultsPN" style="display: none; margin: 5px 0px; flex-shrink: 0;">
+            <header>
+              <strong id="lookup-resultsHeaderPN" style="font-size: larger;"></strong>
+              <x-button id="lookup-btnResultsPrintPN" skin="textured" style="float: right;">
+                <x-box>
+                  <x-icon name='print'></x-icon>
+                  <x-label>Print Barcode</x-label>
+                </x-box>
+              </x-button>
+            </header>
+            <main id="lookup-lookupResultsPN">
+            </main>
+          </x-card>
+        </x-box>
       </x-box>
-      <x-button id="lookup-btnResultsBack" skin="textured">
+      <x-button id="lookup-btnResultsBack" skin="textured" style="margin-top: 20px">
         <x-box>
           <x-icon name='chevron-left'></x-icon>
           <x-label>Back</x-label>

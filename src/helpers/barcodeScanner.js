@@ -122,41 +122,40 @@ class BarcodeScanner extends EventEmitter {
     }
 
     // Generate a new IPN as <cat>-<catMaxIPN+1>
-    spreadsheet.findInventoryItemsByCategory(octopartCat, (results) => {
-      let highestPN = 0;
+    let results = spreadsheet.findInventoryItemsByCategory(octopartCat);
+    let highestPN = 0;
 
-      if (results) {
-        for (let invItem of results) {
-          let ipn = invItem.item["Part Number"];
+    if (results) {
+      for (let invItem of results) {
+        let ipn = invItem.item["Part Number"];
 
-          if (ipn) {
-            let pnPrefixEnd = ipn.indexOf("-");
-            if (pnPrefixEnd > 0) {
-              let pnSuffix = ipn.substring(pnPrefixEnd + 1);
-              if (pnSuffix.length > 0) {
-                let pn = parseInt(pnSuffix, 10);
-                if (pn > highestPN) {
-                  highestPN = pn;
-                }
+        if (ipn) {
+          let pnPrefixEnd = ipn.indexOf("-");
+          if (pnPrefixEnd > 0) {
+            let pnSuffix = ipn.substring(pnPrefixEnd + 1);
+            if (pnSuffix.length > 0) {
+              let pn = parseInt(pnSuffix, 10);
+              if (pn > highestPN) {
+                highestPN = pn;
               }
             }
           }
         }
       }
+    }
 
-      internalPN = `${octopartCat}-` + `${highestPN+1}`.padStart(4, "0");
-      return cb({
-        internalPN,
-        isNewInternalPN: true,
-        supplierPN,
+    internalPN = `${octopartCat}-` + `${highestPN+1}`.padStart(4, "0");
+    return cb({
+      internalPN,
+      isNewInternalPN: true,
+      supplierPN,
 
-        locationID,
+      locationID,
 
-        manufacturerPN,
-        manufacturer,
-        category,
-        description
-      });
+      manufacturerPN,
+      manufacturer,
+      category,
+      description
     });
   }
 
