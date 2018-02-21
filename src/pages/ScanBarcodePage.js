@@ -51,7 +51,7 @@ class ScanBarcodePage extends AppPage {
   }
 
   onScanBarcodeCompleted({ internalPN, /*isNewInternalPN,*/ supplierPN, locationID, manufacturerPN, manufacturer, category, description, quantity }) {
-    this.Elements.category.value = "0";
+    // this.Elements.category.value = "0";
 
     if (internalPN) {
       // No need to validate; internalPN is only set if it's valid

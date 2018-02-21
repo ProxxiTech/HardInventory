@@ -73,15 +73,28 @@ class BarcodeScanner extends EventEmitter {
     // Downside would be if the wrong part was looked up (e.g. several manufacturers use the same
     // MPN for different parts), we'd loose the original (correct) MPN.
 
+    let locationID;
     let manufacturer = octopartMfr;
     let category = octopartCat;
     let description = octopartDesc;
 
     if (internalPN) {
-      // We have an IPN, no need to look one up or generate it
+      // We have an IPN, so all we need to do is find the corresponding locationID (if there is one)
+      let pnResults = spreadsheet.findInventoryItemsByPN(internalPN);
+      for (let result of pnResults) {
+        let locID = result.item["Location"];
+        if (locID) {
+          locationID = locID;
+          break;
+        }
+      }
+
+      //
       return cb({
         internalPN,
         supplierPN,
+
+        locationID,
 
         manufacturerPN,
         manufacturer,
@@ -91,7 +104,6 @@ class BarcodeScanner extends EventEmitter {
     }
 
     let invResults = spreadsheet.findInventoryItemByMPN(manufacturerPN);
-    let locationID;
 
     if (invResults) {
       let invItem = invResults.item;

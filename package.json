@@ -2,7 +2,7 @@
   "name": "HardInventory",
   "productName": "Hard Inventory",
   "description": "Inventory management for hardware startups",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "private": true,
   "author": "Richard Sim <github@devras.com>",
   "copyright": "© 2018, Proxxi Technology Corporation",
