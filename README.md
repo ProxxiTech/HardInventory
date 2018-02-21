@@ -64,7 +64,14 @@ Only macOS can build macOS (as well as Windows and Linux) builds, while the othe
 
 # Configuration
 
-You will need to create a Google Sheet spreadsheet for storing inventory and category data in, and this needs to be in a specific format. Please contact me for details, and I'll fill this in when there's a user ready to take the plunge!
+## Spreadsheet
+
+You will need to create a Google Sheet spreadsheet for storing inventory and category data in, and this needs to be in a specific format. You can use this spreadsheet template to create your own spreadsheet from; simply open it and then select File | Make a copy... to create a duplicate in your Google account.
+https://docs.google.com/spreadsheets/d/16HUKhmg7VBt5Z-bzD3HMQdtWii8MMSHKtTy1gjixDSg/edit?usp=sharing
+
+You will want to add some additional categories to the Categories sheet (the tab at the bottom) of the spreadsheet; there are a few basic categories already such as capacitors and resistors (don't change these!), but you'll likely want some more such as PCBs, molded parts, office supplies, etc. It's best to keep to 2-digit category names (must be numbers only) for formatting's sake. Additional categories can be added at any point, either from within Hard Inventory or in the spreadsheet directly.
+
+## Application
 
 There are two .json files currently required for configuring Hard Inventory - app/config.json, and app/Inventory-System-Auth.json. Neither of these files are in the git repository, and must rather be created manually (well, Inventory-System-Auth.json is exported from Google, but more on that later).
 
@@ -76,7 +83,7 @@ Firstly, config.json
   "octopart_key": "<your Octopart API key>"
 }
 ```
-The spreadsheet_url you get from the Share window in Google Sheets. The spreadsheet_id is just the long ID part of that same URL. The octopart_key is an API key provided to you when you sign up at https://octopart.com/api/home, and lets Hard Inventory programmatically search for component details.
+The spreadsheet_url you get from the Share window in Google Sheets. The spreadsheet_id is just the long ID part of that same URL (in the example template linked above, that would be16HUKhmg7VBt5Z-bzD3HMQdtWii8MMSHKtTy1gjixDSg - but make sure to use the id from your own spreadsheet, not the template). The octopart_key is an API key provided to you when you sign up at https://octopart.com/api/home, and lets Hard Inventory programmatically search for component details.
 
 Next up we have Inventory-System-Auth.json, which is obtained from Google. Unfortunately it's a multi-step process, and the instructions at the link are outdated (things have been renamed) so you'll have to do a bit of thinking to find the correct steps to take - but it will set you on the right track at least.
 https://github.com/theoephraim/node-google-spreadsheet#service-account-recommended-method
