@@ -5,7 +5,7 @@ Simplified and fast inventory management for hardware startups, small businesses
 
 * Use a barcode scanner to quickly and accurately scan 1D and 2D barcodes from Digi-Key, Mouser, Arrow, etc into a Google Sheets document.
 * Manual entry for any type of inventory, not just electronic components (track shots back from the injection molder, boxes for shipping, pens...).
-* Electronic component information is automatically populated from OctoPart, including the component type for auto-generating (internal) part numbers with.
+* Electronic component information is automatically populated from Octopart, including the component type for auto-generating (internal) part numbers with.
 * Print out barcodes (QR codes) and human-readable text labels for organization.
 
 The design intent is to be a low-overhead system that gets all your inventory entered fast and accurately, so later if and when you need to move to a more complex and capable system, it's easy to make the transition. To this end, the application is backed by Google Sheets, not a database - this way you can easily manually edit data, copy/paste to Excel, etc, etc. This design certainly has its limitations, but also some pretty huge advantages.
@@ -94,8 +94,10 @@ Once you've completed those steps, you will be provided a json file to download;
 
 * Add support for more label printers. Only the Brother QL-800 with 29mm labels is supported right now, but other QL-series label printers that support 29mm labels should easily be possible. The only restriction from supporting other printers is my lack of hardware to test on.
 * Results from the Lookup screen should be editable
+* Auto-create the required default categories (resistors, capacitors, etc) if they don't exist
 * Allow configuration of Octopart API key, and Google spreadsheet/keys/auth at runtime, so pre-built binaries can be distributed. Currently the configuration .json files are compiled in and thus can't be changed.
 * Simplify configuration of spreadsheet and Google auth somehow? I'm not sure anything can be done, but it's definitely annoyingly complex right now.
+   * Can the Google sheets API create new spreadsheets, or clone existing ones? Would remove a few setup steps.
 
 # Structure of the project
 
