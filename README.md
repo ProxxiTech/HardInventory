@@ -3,6 +3,7 @@
 <img src="docs/images/hard-inventory-128x128.png" align="right" />
 Simplified and fast inventory management for hardware startups, small businesses, and hobbyists getting burried alive by their electronic components (and other things that need to be accounted for).
 
+* Cross-platform desktop app (Windows, macOS, Linux) using the Electron framework.
 * Use a barcode scanner to quickly and accurately scan 1D and 2D barcodes from Digi-Key, Mouser, Arrow, etc into a Google Sheets document.
 * Manual entry for any type of inventory, not just electronic components (track shots back from the injection molder, boxes for shipping, pens...).
 * Electronic component information is automatically populated from Octopart, including the component type for auto-generating (internal) part numbers with.
@@ -94,6 +95,7 @@ Once you've completed those steps, you will be provided a json file to download;
 
 * Add support for more label printers. Only the Brother QL-800 with 29mm labels is supported right now, but other QL-series label printers that support 29mm labels should easily be possible. The only restriction from supporting other printers is my lack of hardware to test on.
 * Results from the Lookup screen should be editable
+* onCaptureEnd (barcode scanned) listener for Inventory and Categories pages; filter the table by Loc ID, IPN, or MPN.
 * Auto-create the required default categories (resistors, capacitors, etc) if they don't exist
 * Allow configuration of Octopart API key, and Google spreadsheet/keys/auth at runtime, so pre-built binaries can be distributed. Currently the configuration .json files are compiled in and thus can't be changed.
 * Simplify configuration of spreadsheet and Google auth somehow? I'm not sure anything can be done, but it's definitely annoyingly complex right now.
