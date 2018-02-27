@@ -1,5 +1,7 @@
 import { Grid } from "ag-grid";
 
+import barcodeScanner from "../helpers/barcodeScanner";
+
 import * as spreadsheet from "../spreadsheet/spreadsheet";
 
 import AppPage from "./AppPage";
@@ -63,7 +65,7 @@ class CategoriesPage extends AppPage {
       if (val === null) {
         return null;
       }
-      return parseInt(val);
+      return parseInt(val, 10);
     };
     // columnDefs[0].valueFormatter = (params) => {
     //   return params.value.toString();
@@ -166,7 +168,7 @@ class CategoriesPage extends AppPage {
       onCellValueChanged: (params) => {
         // console.log(`Column ${params.colDef.field} changed of row ${params.data.itemIndex} from ${params.oldValue} to ${params.newValue} (${params.value})`);
 
-        this.changedRow[params.colDef.field] = params.newValue.trim();
+        this.changedRow[params.colDef.field] = (typeof params.newValue === "string") ? params.newValue.trim() : params.newValue;
       },
       onRowValueChanged: (params) => {
         // console.log(`Row ${params.data.itemIndex} changed`);
@@ -257,8 +259,29 @@ class CategoriesPage extends AppPage {
     new Grid(this.Elements.grid, this.gridOptions);
   }
 
+  onScanBarcodeCompleted({ internalPN/*, locationID, manufacturerPN*/ }) {
+    if (internalPN) {
+      // No validation needed; we only have an internalPN here when it's already been validated
+      let pnPrefixEnd = internalPN.indexOf("-");
+      let pnCategory = internalPN.substring(0, pnPrefixEnd);
+
+      let filterComponent = this.gridOptions.api.getFilterInstance("Category");
+      // let model = filterComponent.getModel();
+      filterComponent.setModel({
+        type: "equals",  // One of: {equals, notEqual, lessThanOrEqual, greaterThan, greaterThanOrEqual, inRange}
+        filter: parseInt(pnCategory, 10),
+        // filterTo: 0 // Only valid for inRange, otherwise unused
+      });
+      filterComponent.onFilterChanged();
+    }
+  }
+
   onEnter() {
     super.onEnter();
+
+    this.onCaptureEndHandle = barcodeScanner.addListener("onCaptureEnd", (barcodeData) => {
+      this.onScanBarcodeCompleted(barcodeData);
+    });
   }
 
   showPage() {
@@ -267,7 +290,11 @@ class CategoriesPage extends AppPage {
     this.gridOptions.api.sizeColumnsToFit();
   }
 
-  onExit() { super.onExit(); }
+  onExit() {
+    super.onExit();
+
+    barcodeScanner.removeListener("onCaptureEnd", this.onCaptureEndHandle);
+  }
 }
 
 export default CategoriesPage;

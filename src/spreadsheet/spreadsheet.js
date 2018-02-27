@@ -171,7 +171,7 @@ export function initialize(doc_id, credentials, cb) {
           console.log("Loading categories...");
 
           catWorksheet.getCells(
-            { "min-row": 2, "max-row": catMaxRow, "min-col": 1, "max-col": 26, "return-empty": false },
+            { "min-row": 2, "max-row": catMaxRow, "min-col": 1, "max-col": catNumCols, "return-empty": false },
             function(err, cells) {
               // logAll('Category Rows', cells);
               /*
@@ -222,7 +222,7 @@ export function initialize(doc_id, credentials, cb) {
           console.log("Loading inventory...");
 
           invWorksheet.getCells(
-            { "min-row": 2, "max-row": invMaxRow, "min-col": 1, "max-col": 26, "return-empty": false },
+            { "min-row": 2, "max-row": invMaxRow, "min-col": 1, "max-col": invNumCols, "return-empty": false },
             function(err, cells) {
               // logAll('Inventory Rows', cells);
               /*
@@ -282,10 +282,19 @@ export function initialize(doc_id, credentials, cb) {
 function findInventoryItemInternal(findColIdx, value) {
   for (let rowIdx=0; rowIdx<invTable.length; rowIdx++) {
     let row = invTable[rowIdx];
+    if (!row[findColIdx]) {
+      continue;
+    }
     let itemValue = row[findColIdx].value;
 
     if (itemValue.toLowerCase() === value.toLowerCase()) {
       let item = {};
+
+      // Fill in default values incase some cells are empty and thus missing/not included
+      for (let i=0; i<invNumCols; i++) {
+        item[invHeaderIndexToName[i]] = null;
+      }
+
       for (let cell of row) {
         let colIdx = cell.col - 1;
         let colName = invHeaderIndexToName[colIdx];
@@ -307,10 +316,19 @@ function findInventoryItemsInternal(findColIdx, value) {
 
   for (let rowIdx=0; rowIdx<invTable.length; rowIdx++) {
     let row = invTable[rowIdx];
+    if (!row[findColIdx]) {
+      continue;
+    }
     let itemValue = row[findColIdx].value;
 
     if (itemValue.toLowerCase() === value) {
       let item = {};
+
+      // Fill in default values incase some cells are empty and thus missing/not included
+      for (let i=0; i<invNumCols; i++) {
+        item[invHeaderIndexToName[i]] = null;
+      }
+
       for (let cell of row) {
         let colIdx = cell.col - 1;
         let colName = invHeaderIndexToName[colIdx];
@@ -332,10 +350,19 @@ function findPrefixedInventoryItemsInternal(findColIdx, prefix) {
 
   for (let rowIdx=0; rowIdx<invTable.length; rowIdx++) {
     let row = invTable[rowIdx];
+    if (!row[findColIdx]) {
+      continue;
+    }
     let itemValue = row[findColIdx].value;
 
     if (itemValue.toLowerCase().indexOf(prefix) == 0) {
       let item = {};
+
+      // Fill in default values incase some cells are empty and thus missing/not included
+      for (let i=0; i<invNumCols; i++) {
+        item[invHeaderIndexToName[i]] = null;
+      }
+
       for (let cell of row) {
         let colIdx = cell.col - 1;
         let colName = invHeaderIndexToName[colIdx];
@@ -384,6 +411,12 @@ export function getInventoryItemDirect(rowIdx, cb) {
       }
 
       let item = {};
+
+      // Fill in default values incase some cells are empty and thus missing/not included
+      for (let i=0; i<invNumCols; i++) {
+        item[invHeaderIndexToName[i]] = null;
+      }
+
       for (let cell of cells) {
         let colIdx = cell.col - 1;
         let colName = invHeaderIndexToName[colIdx];
@@ -430,10 +463,19 @@ export function getInventoryItem(rowIdx) {
 function findCategoryItemInternal(findColIdx, value) {
   for (let rowIdx=0; rowIdx<catTable.length; rowIdx++) {
     let row = catTable[rowIdx];
+    if (!row[findColIdx]) {
+      continue;
+    }
     let itemValue = row[findColIdx].value;
 
     if (itemValue.toLowerCase() === value.toLowerCase()) {
       let item = {};
+
+      // Fill in default values incase some cells are empty and thus missing/not included
+      for (let i=0; i<catNumCols; i++) {
+        item[catHeaderIndexToName[i]] = null;
+      }
+
       for (let cell of row) {
         let colIdx = cell.col - 1;
         let colName = catHeaderIndexToName[colIdx];
@@ -466,6 +508,12 @@ export function getCategoryItem(rowIdx) {
   let row = catTable[rowIdx];
 
   let item = {};
+
+  // Fill in default values incase some cells are empty and thus missing/not included
+  for (let i=0; i<catNumCols; i++) {
+    item[catHeaderIndexToName[i]] = null;
+  }
+
   for (let cell of row) {
     let colIdx = cell.col - 1;
     let colName = catHeaderIndexToName[colIdx];
@@ -487,7 +535,14 @@ function setInventoryItemInternal(rowIdx, rowNum, item, cb) {
       for (let col in item) {
         let colIdx = invHeaderNameToIndex[col];
 
-        cells[colIdx].value = item[col];
+        let value = item[col];
+        if ((typeof value === "string") && !value) {
+          value = '=""';
+        } else if ((typeof value === "number") && !value) {
+          // Ugh the value setter in the google-spreadsheet will clear the cells value if it's falsey.
+          value = value.toString();
+        }
+        cells[colIdx].value = value;
       }
 
       invTable[rowIdx] = new Array(invNumCols);
@@ -553,7 +608,14 @@ function setCategoryItemInternal(rowIdx, rowNum, item, cb) {
       for (let col in item) {
         let colIdx = catHeaderNameToIndex[col];
 
-        cells[colIdx].value = item[col];
+        let value = item[col];
+        if ((typeof value === "string") && !value) {
+          value = '=""';
+        } else if ((typeof value === "number") && !value) {
+          // Ugh the value setter in the google-spreadsheet will clear the cells value if it's falsey.
+          value = value.toString();
+        }
+        cells[colIdx].value = value;
       }
 
       catTable[rowIdx] = new Array(catNumCols);

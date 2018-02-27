@@ -1,5 +1,7 @@
 import { Grid } from "ag-grid";
 
+import barcodeScanner from "../helpers/barcodeScanner";
+
 import * as spreadsheet from "../spreadsheet/spreadsheet";
 
 import AppPage from "./AppPage";
@@ -59,7 +61,7 @@ class InventoryPage extends AppPage {
         if (val === null) {
           return null;
         }
-        return parseInt(val);
+        return parseInt(val, 10);
       };
       // columnDefs[numericColumnIndex].valueFormatter = (params) => {
       //   return params.value.toString();
@@ -169,6 +171,37 @@ class InventoryPage extends AppPage {
     new Grid(this.Elements.grid, this.gridOptions);
   }
 
+  onScanBarcodeCompleted({ internalPN, locationID, manufacturerPN }) {
+    let mpnFilterComponent = this.gridOptions.api.getFilterInstance("Manufacturer Part Number");
+    let ipnFilterComponent = this.gridOptions.api.getFilterInstance("Part Number");
+    let locFilterComponent = this.gridOptions.api.getFilterInstance("Location");
+
+    mpnFilterComponent.setModel(null);
+    ipnFilterComponent.setModel(null);
+    locFilterComponent.setModel(null);
+
+    if (manufacturerPN) {
+      mpnFilterComponent.setModel({
+        type: "equals",  // One of: {equals, notEqual, contains, notContains, startsWith, endsWith}
+        filter: manufacturerPN
+      });
+    } else if (internalPN) {
+      ipnFilterComponent.setModel({
+        type: "equals",  // One of: {equals, notEqual, contains, notContains, startsWith, endsWith}
+        filter: internalPN
+      });
+    } else if (locationID) {
+      locFilterComponent.setModel({
+        type: "equals",  // One of: {equals, notEqual, contains, notContains, startsWith, endsWith}
+        filter: locationID
+      });
+    }
+
+    mpnFilterComponent.onFilterChanged();
+    ipnFilterComponent.onFilterChanged();
+    locFilterComponent.onFilterChanged();
+  }
+
   onEnter() {
     super.onEnter();
 
@@ -176,6 +209,10 @@ class InventoryPage extends AppPage {
       this.gridOptions.api.destroy();
     }
     this.updateSpreadsheetGrid();
+
+    this.onCaptureEndHandle = barcodeScanner.addListener("onCaptureEnd", (barcodeData) => {
+      this.onScanBarcodeCompleted(barcodeData);
+    });
   }
 
   showPage() {
@@ -200,7 +237,11 @@ class InventoryPage extends AppPage {
     }
   }
 
-  onExit() { super.onExit(); }
+  onExit() {
+    super.onExit();
+
+    barcodeScanner.removeListener("onCaptureEnd", this.onCaptureEndHandle);
+  }
 }
 
 export default InventoryPage;

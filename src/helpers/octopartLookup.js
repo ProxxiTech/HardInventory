@@ -79,9 +79,9 @@ function performLookup(queries, cb) {
 
     // console.log(JSON.stringify(item.descriptions, null, 4));
 
-    desc = findOctopartDescription(item, mfr);
+    desc = findOctopartDescription(item, "Digi-Key");
     if (desc == null)
-      desc = findOctopartDescription(item, "Digi-Key");
+      desc = findOctopartDescription(item, mfr);
     if (desc == null)
       desc = findOctopartDescription(item, "Arrow");
     if (desc == null)

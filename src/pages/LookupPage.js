@@ -17,10 +17,6 @@ import AppPage from "./AppPage";
 class LookupPage extends AppPage {
   constructor(data) {
     super(data);
-
-    this.kbeData = [];
-    this.kbeBlock = [];
-    this.isCapturingBarcode = false;
   }
 
   onScanBarcodeCompleted({ internalPN, locationID, manufacturerPN }) {

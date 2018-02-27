@@ -12,10 +12,6 @@ import AppPage from "./AppPage";
 class ScanBarcodePage extends AppPage {
   constructor(data) {
     super(data);
-
-    this.kbeData = [];
-    this.kbeBlock = [];
-    this.isCapturingBarcode = false;
   }
 
   logAll(title, o) {
