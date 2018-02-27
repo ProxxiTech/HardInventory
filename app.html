@@ -258,6 +258,9 @@
     </x-box>
     <x-box vertical id="scratchpad-page" class="container" style="display: none;">
       <x-box vertical>
+        <x-button id="scratchpad-btnDuplicates">
+          <x-label>Find Duplicates</x-label>
+        </x-button>
         <x-button id="scratchpad-btnDataMatrix">
           <x-label>Data Matrix</x-label>
         </x-button>
@@ -269,6 +272,9 @@
         </x-button>
         <x-box vertical>
           <div>
+            <x-input id="scratchpad-location" readonly></x-input>
+          </div>
+          <div>
             <x-input id="scratchpad-category" readonly></x-input>-<x-input id="scratchpad-pn" readonly></x-input>
           </div>
           <div>
@@ -276,6 +282,12 @@
           </div>
           <div>
             <x-input id="scratchpad-qty" readonly></x-input>
+          </div>
+          <div>
+            <x-input id="scratchpad-mfr" readonly></x-input>
+          </div>
+          <div>
+            <x-input id="scratchpad-desc" readonly></x-input>
           </div>
         </x-box>
       </x-box>

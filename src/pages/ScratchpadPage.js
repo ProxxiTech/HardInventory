@@ -9,6 +9,50 @@ class ScratchpadPage extends AppPage {
     super(data);
   }
 
+  onBtnDuplicates() {
+    let visited = new Map();
+    for (let i=0; i<spreadsheet.getInventoryItemCount(); i++) {
+      let item = spreadsheet.getInventoryItem(i);
+
+      if (item["Location"]) {
+        let items = visited.get(item["Part Number"].toUpperCase());
+        if (!items) {
+          items = [];
+          visited.set(item["Part Number"].toUpperCase(), items);
+        }
+
+        items.push(item);
+      }
+    }
+
+    for (let [ipn, pnItems] of visited) {
+      if (pnItems.length > 1) {
+        let locations = new Map();
+        for (let item of pnItems) {
+          let locItems = locations.get(item["Location"].toUpperCase());
+          if (!locItems) {
+            locItems = [];
+            locations.set(item["Location"].toUpperCase(), locItems);
+          }
+
+          locItems.push(item);
+        }
+
+        if (locations.size > 1) {
+          console.log(`Multiple locations for ${ipn}:`);
+          for (let [loc, items] of locations.entries()) {
+            console.log(`\t${loc}`);
+            for (let item of items) {
+              console.log(`\t\t${item["Manufacturer Part Number"]}`);
+            }
+          }
+        }
+      }
+    }
+
+    console.log("Done searching for duplicate locations.");
+  }
+
   onBtnDataMatrix() {
   }
 
@@ -110,18 +154,25 @@ class ScratchpadPage extends AppPage {
 
     this.Elements = {};
     let elementNames = [
+      "btnDuplicates",
       "btnDataMatrix",
       "btnPDF417",
       "btn1D",
+      "location",
       "category",
       "pn",
       "mpn",
       "qty",
+      "mfr",
+      "desc",
     ];
     for (let name of elementNames) {
       this.Elements[name] = document.querySelector(`#${this.pageName}-${name}`);
     }
 
+    this.Elements.btnDuplicates.addEventListener("click",  () => {
+      this.onBtnDuplicates();
+    });
     this.Elements.btnDataMatrix.addEventListener("click",  () => {
       this.onBtnDataMatrix();
     });
