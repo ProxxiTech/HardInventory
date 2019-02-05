@@ -63,7 +63,27 @@ npm run release-all
 ```
 Only macOS can build macOS (as well as Windows and Linux) builds, while the other platforms can build eachother but not macOS. This is unfortunately due to macOS codesigning only working on macOS systems.
 
-# Configuration
+# Setup and Configuration
+
+## Hardware
+
+### Barcode scanner
+
+I use the Teemi TMSL-55 Bluetooth 2D barcode scanner. It's readily available from Amazon, very cheap, and works quite well (a bit slower than some other scanners, but not too bad). You'll want a 2D barcode scanner as most distributrors now use ECIA 2D Data Matrix barcodes to encode lots of details about parts (not just the part number, but order information, quantities, etc).
+
+#### Configuration
+
+There are lots of options for most barcode scanners for the type of keyboard they emulate and adding prefixes and suffixes to the data they read in, so you'll want to check with your scanners manual to set it up correctly. For keyboard layout, I use US Keyboard, but I don't think that'll matter (but maybe it does - please let me know if you have issues with other emulated layouts, but really you should just use US as there's no reason not to).
+
+### Label printer
+
+I use the Brother QL-800 label printer with 29mm black/white labels. Other label printers are not supported currently, nor label sizes or types. Other Brother QL-series label printers should be easy enough to support, so please send Pull Requests if you add any.
+
+29mm labels were chosen because they're a sweet-spot of size; not too big that they take up too much space, and not too small that they're difficult to read (with either your eyes or the barcode scanner).
+
+#### Configuration
+
+I don't believe I did any specific configuration of the printer, but if you run into issues printing the labels where they appear the wrong size, cut off, too much blank space, or otherwise don't seem quite right, please let me know and I'll look into it.
 
 ## Spreadsheet
 

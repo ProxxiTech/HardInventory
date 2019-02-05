@@ -215,16 +215,24 @@ class BarcodeScanner extends EventEmitter {
 
   processMouser2DBarcode(kbeData, cb) {
     // Block prefixes for Mouser Mata Matrix barcodes:
-    // 1P		Vendor Part Number (or Customer Part Number, ugh)
+    // P		Customer Part Number (newer barcodes only)
+    // 1P		Vendor Part Number (or Customer Part Number in older barcodes, ugh)
     // Q		Quantity
     // 4L		Country of origin
 
+    let partNumber = this.findExtendedBarcodeBlock(kbeData, "P");
     let manufacturerPartNumber = this.findExtendedBarcodeBlock(kbeData, "1P");
     let quantityStr = this.findExtendedBarcodeBlock(kbeData, "Q");
 
     //
+    let pnResults = this.parsePartNumber(partNumber);
+    // Handle if 1P field refers to the Customer Part Number
+    if (partNumber === manufacturerPartNumber) {
+      manufacturerPartNumber = null;
+    }
+
     let quantity = quantityStr ? parseInt(quantityStr, 10) : 0;
-    this.parseManufacturerPartNumber(manufacturerPartNumber, null, (mpnResults) => {
+    this.parseManufacturerPartNumber(manufacturerPartNumber, pnResults, (mpnResults) => {
       cb({
         ...mpnResults,  // includes pnResults, possibly modified
         quantity

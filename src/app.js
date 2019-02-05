@@ -19,17 +19,13 @@ import "./helpers/external_links.js";
 import { remote } from "electron";
 import jetpack from "fs-jetpack";
 
-import octopartjs from "octopartjs";
-
 import env from "env";
 
+import config from "./config";
+
+import octopartjs from "octopartjs";
+
 import * as spreadsheet from "./spreadsheet/spreadsheet";
-
-//
-const app = remote.app;
-const appDir = jetpack.cwd(app.getAppPath() + "/app");
-
-const config = appDir.read("config.json", "json");
 
 octopartjs.apikey(config.octopart_key);
 
@@ -102,6 +98,10 @@ barcodeScanner.addListener("onCaptureStart", () => {
 barcodeScanner.addListener("onCaptureEnd", () => {
   appState.displayLoadingScreen(false);
 });
+
+//
+const app = remote.app;
+const appDir = jetpack.cwd(app.getAppPath() + "/app");
 
 const creds = appDir.read("Inventory-System-Auth.json", "json");
 spreadsheet.initialize(config.spreadsheet_id, creds, () => {
